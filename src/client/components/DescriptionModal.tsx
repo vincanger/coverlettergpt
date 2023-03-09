@@ -23,20 +23,11 @@ export default function DescriptionModal({ description, isOpen, onClose, onOpen 
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const copyButtonRef = useRef(null);
 
-  useEffect(() => {
-    if (description) {
-      onOpen();
-    }
-    return () => {
-      onClose();
-    }
-  }, [description]);
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} initialFocusRef={copyButtonRef}>
       <ModalOverlay />
       <ModalContent maxH='lg' maxW='lg' bgColor='bg-modal'>
-        <ModalHeader>Your Cover Letter</ModalHeader>
+        <ModalHeader>Job Description</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
         

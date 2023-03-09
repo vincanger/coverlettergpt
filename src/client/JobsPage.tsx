@@ -45,10 +45,10 @@ function JobsPage(props: any) {
 
   const coverLetterHandler = (job: Job) => {
     if (job) {
-      onOpen()
+      setJobId(job.id);
+      onOpen();
     }
-    setJobId(job.id)
-  }
+  };
 
   const checkboxHandler = async (e: any, job: Job) => {
     try {
@@ -60,17 +60,16 @@ function JobsPage(props: any) {
         description: job.description,
         isCompleted: e.target.checked,
       };
-      console.log(payload)
-      await updateJob(payload)
-      
+      console.log(payload);
+      await updateJob(payload);
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
-  }
+  };
 
   const updateCoverLetterHandler = async (jobId: number) => {
-    history.push(`/?job=${jobId}`)
-  }
+    history.push(`/?job=${jobId}`);
+  };
 
   return (
     <VStack gap={1}>
@@ -81,8 +80,8 @@ function JobsPage(props: any) {
             jobs.map((job: Job) => (
               <AccordionItem key={job.id}>
                 <h2>
-                  <AccordionButton _focus={{ boxShadow: '0px -1px 0px 0px var(--chakra-colors-active)' }}>
-                    <HStack flex='1' textAlign='left' justifyContent='space-between'>
+                  <HStack flex='1' justifyContent='space-between'>
+                    <AccordionButton _focus={{ boxShadow: '0px -1px 0px 0px var(--chakra-colors-active)' }}>
                       <Text textDecoration={job.isCompleted ? 'line-through' : ''}>
                         <b>{job.title}</b> @ {job.company}
                       </Text>
@@ -91,9 +90,9 @@ function JobsPage(props: any) {
                         Applied
                       </Text>
                       <Checkbox mx={1} isChecked={job.isCompleted} onChange={(e) => checkboxHandler(e, job)} />
-                    </HStack>
-                    <AccordionIcon />
-                  </AccordionButton>
+                      <AccordionIcon />
+                    </AccordionButton>
+                  </HStack>
                   <Divider maxW='40%' variant='dashed' />
                 </h2>
                 <AccordionPanel pb={4} pt={2}>
@@ -135,12 +134,7 @@ function JobsPage(props: any) {
       </Button>
       {coverLetter && <ModalElement coverLetterData={coverLetter} isOpen={isOpen} onOpen={onOpen} onClose={onClose} />}
       {descriptionText && (
-        <DescriptionModal
-          description={descriptionText}
-          isOpen={desIsOpen}
-          onOpen={desOnOpen}
-          onClose={desOnClose}
-        />
+        <DescriptionModal description={descriptionText} isOpen={desIsOpen} onOpen={desOnOpen} onClose={desOnClose} />
       )}
     </VStack>
   );

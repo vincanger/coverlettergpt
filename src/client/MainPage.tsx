@@ -147,6 +147,7 @@ function App() {
       }
       const coverLetter = (await generateCoverLetter(payload)) as CoverLetter;
       setCoverLetter(coverLetter);
+      onOpen();
       return {
         job,
         coverLetter,
@@ -171,6 +172,7 @@ function App() {
 
       const updatedJob = (await updateCoverLetter(payload)) as Job & { coverLetters: CoverLetter[] };
       setCoverLetter(updatedJob.coverLetters[0]);
+      onOpen();
       return updatedJob;
     } catch (error) {
       console.error(error);

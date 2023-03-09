@@ -23,7 +23,7 @@ type ModalProps = {
 };
 
 export default function ModalElement({ coverLetterData, isOpen, onOpen, onClose }: ModalProps) {
-  const [selectedCoverLetter, setSelectedCoverLetter] = useState<string>(coverLetterData[0].content);
+  const [selectedCoverLetter, setSelectedCoverLetter] = useState<string>(' ');
 
   const { hasCopied, onCopy } = useClipboard(selectedCoverLetter);
 
@@ -31,12 +31,7 @@ export default function ModalElement({ coverLetterData, isOpen, onOpen, onClose 
   const copyButtonRef = useRef(null);
 
   useEffect(() => {
-    if (coverLetterData) {
-      onOpen();
-    }
-    return () => {
-      onClose();
-    }
+    setSelectedCoverLetter(coverLetterData[0].content);
   }, [coverLetterData]);
 
   return (
