@@ -12,6 +12,9 @@ app applyai {
   //   },
   //   onAuthFailedRedirectTo: "/login",
   // },
+  db: {
+    system: PostgreSQL
+  },
   client: {
     rootComponent: import App from "@client/App",
   },
