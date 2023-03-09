@@ -5,8 +5,8 @@ export function CallToAction() {
     return (
         <VStack width={["sm", "lg", "xl"]} mt={10} textAlign="center" gap={4}>
             <Text color="text-contrast-sm" fontSize="sm">
-                I'm planning to open source this project soon. If you're
-                interested in following along, you can follow me on Twitter.
+                I'm planning to add lots more features and open source this project soon! If you're
+                interested... 
             </Text>
             <Button colorScheme="twitter" leftIcon={<FaTwitter />} size="sm">
                 <a href="https://twitter.com/hot_town" target="_blank">

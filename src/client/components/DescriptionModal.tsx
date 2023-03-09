@@ -9,7 +9,7 @@ import {
   Textarea,
   Button,
 } from '@chakra-ui/react';
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 
 type DescriptionModalProps = {
   description: string;

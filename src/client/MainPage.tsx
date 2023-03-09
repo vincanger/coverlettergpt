@@ -1,15 +1,10 @@
 import {
-    extendTheme,
-    ChakraProvider,
     HStack,
     VStack,
-    Center,
     Heading,
     Text,
     useDisclosure,
-    Fade,
     FormErrorMessage,
-    Box,
     FormControl,
     FormLabel,
     Input,
@@ -17,30 +12,26 @@ import {
     Button,
     FormHelperText,
     Code,
-    Slide,
-    useClipboard,
-    Tooltip,
     Checkbox
 } from "@chakra-ui/react";
 import { ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { useHistory } from "react-router-dom";
-import { useQuery } from "@wasp/queries";
 // import getJob from "@wasp/queries/getJob";
 import generateCoverLetter from "@wasp/actions/generateCoverLetter";
 import createJob from "@wasp/actions/createJob";
 // import updateCoverLetter from '@wasp/actions/updateCoverLetter';
 // import { useClickTracker } from './useClickTracker';
 import * as pdfjsLib from "pdfjs-dist";
-import { useState, useEffect, useRef } from "react";
-import Login from "./LoginPage";
+import { useState, useEffect } from "react";
+// import Login from "./LoginPage";
 import { CoverLetter, Job } from "@wasp/entities";
 import ModalElement from "./components/Modal";
 import BorderBox from "./components/BorderBox";
 
 function MainPage() {
     const [pdfText, setPdfText] = useState<string | null>(null);
-    const [jobToFetch, setJobToFetch] = useState<number | null>(null);
+    // const [jobToFetch, setJobToFetch] = useState<number | null>(null);
     const [isCoverLetterUpdate, setIsCoverLetterUpdate] =
         useState<boolean>(false);
     const [isCompleteCoverLetter, setIsCompleteCoverLetter] =
@@ -56,7 +47,7 @@ function MainPage() {
     const {
         handleSubmit,
         register,
-        reset,
+        // reset,
         formState: { errors: formErrors, isSubmitting }
     } = useForm();
 
@@ -71,7 +62,7 @@ function MainPage() {
         const jobParam = urlParams.get("job");
         if (jobParam) {
             setIsCoverLetterUpdate(true);
-            setJobToFetch(parseInt(jobParam));
+            // setJobToFetch(parseInt(jobParam));
         }
     }, []);
 
@@ -113,7 +104,6 @@ function MainPage() {
                     // Get the text content for the page
                     const page = await pdf.getPage(i);
                     const content = await page.getTextContent();
-                    console.log("content >>>", content);
                     const text = content.items
                         .map((item: any) => {
                             if (item.str) {
@@ -133,7 +123,7 @@ function MainPage() {
     }
 
     type CoverLetterPayload = {
-        jobId: number;
+        jobId: string;
         title: string;
         content: string;
         description: string;
@@ -158,7 +148,7 @@ function MainPage() {
                     includeWittyRemark: values.includeWittyRemark
                 };
             }
-            console.log(payload);
+
             const coverLetter = (await generateCoverLetter(
                 payload
             )) as CoverLetter;

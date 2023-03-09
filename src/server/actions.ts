@@ -1,4 +1,4 @@
-import HttpError from "@wasp/core/HttpError.js";
+// import HttpError from "@wasp/core/HttpError.js";
 import fetch from "node-fetch";
 import type { Resume, Job, CoverLetter } from "@wasp/entities";
 import type { GenerateCoverLetter, CreateJob } from "@wasp/actions/types";
@@ -104,18 +104,18 @@ export const generateCoverLetter: GenerateCoverLetter<
     };
 
     const json = (await response.json()) as OpenAIResponse;
-    console.log("\n\n response >>>>", json, "\n\n");
-    console.log(
-        "\n\n coverLetter Create args >>>>",
-        {
-            title,
-            content: json.choices[0].message.content,
-            tokenUsage: json.usage.completion_tokens,
-            // user: { connect: { id: context.user.id } },
-            job: { connect: { id: jobId } }
-        },
-        "\n\n"
-    );
+    // console.log("\n\n response >>>>", json, "\n\n");
+    // console.log(
+    //     "\n\n coverLetter Create args >>>>",
+    //     {
+    //         title,
+    //         content: json.choices[0].message.content,
+    //         tokenUsage: json.usage.completion_tokens,
+    //         // user: { connect: { id: context.user.id } },
+    //         job: { connect: { id: jobId } }
+    //     },
+    //     "\n\n"
+    // );
 
     return context.entities.CoverLetter.create({
         data: {
@@ -137,7 +137,7 @@ export const createJob: CreateJob<JobPayload, Job> = (
     { title, company, location, description },
     context
 ) => {
-    console.log("create job");
+    // console.log("create job");
     // if (!context.user) {
     //   throw new HttpError(401);
     // }
