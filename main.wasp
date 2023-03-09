@@ -2,16 +2,16 @@ app applyai {
   wasp: {
     version: "^0.9.0"
   },
-  title: "applyai",
-  auth: {
-    userEntity: User,
-    methods: {
-      usernameAndPassword: {}, 
-      // google: {},
-      // gitHub: {}
-    },
-    onAuthFailedRedirectTo: "/login",
-  },
+  title: "CoverLetterGPT",
+  // auth: {
+  //   userEntity: User,
+  //   methods: {
+  //     usernameAndPassword: {},
+  //     // google: {},
+  //     // gitHub: {}
+  //   },
+  //   onAuthFailedRedirectTo: "/login",
+  // },
   client: {
     rootComponent: import App from "@client/App",
   },
@@ -28,39 +28,39 @@ app applyai {
   ],
 }
 
-entity User {=psl 
-  id          Int     @id @default(autoincrement())
-  username    String  @unique
-  password    String  
-  letters     CoverLetter[]
-  jobs        Job[]
-  resumes     Resume[]
-psl=}
+// entity User {=psl
+//   id          Int     @id @default(autoincrement())
+//   username    String  @unique
+//   password    String
+//   letters     CoverLetter[]
+//   jobs        Job[]
+//   resumes     Resume[]
+// psl=}
 
 
 entity CoverLetter {=psl
-  id         Int     @id @default(autoincrement())
+  id         String @id @default(uuid())
   title      String
   content    String
   tokenUsage Int
   job        Job     @relation(fields: [jobId], references: [id])
-  jobId      Int     
-  user       User    @relation(fields: [userId], references: [id])
-  userId     Int     
+  jobId      String
+  // user       User    @relation(fields: [userId], references: [id])
+  // userId     Int
   createdAt  DateTime @default(now())
   updatedAt  DateTime? @updatedAt
 psl=}
 
 entity Job {=psl
-  id            Int           @id @default(autoincrement())
+  id            String @id @default(uuid())
   title         String
   company       String
   location      String
   description   String
   // resumes       Resume[]
-  coverLetter   CoverLetter[]   
-  user          User          @relation(fields: [userId], references: [id])
-  userId        Int     
+  coverLetter   CoverLetter[]
+  // user          User          @relation(fields: [userId], references: [id])
+  // userId        Int
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   isCompleted   Boolean      @default(false)
@@ -69,12 +69,12 @@ entity Job {=psl
 psl=}
 
 entity Resume {=psl
-  id         Int     @id @default(autoincrement())
+   id        String @id @default(uuid())
   content    String
   // job        Job     @relation(fields: [jobId], references: [id])
   // jobId      Int     @unique
-  user       User    @relation(fields: [userId], references: [id])
-  userId     Int     
+  // user       User    @relation(fields: [userId], references: [id])
+  // userId     Int
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 psl=}
@@ -84,15 +84,21 @@ page MainPage {
   component: import Main from "@client/MainPage"
 }
 
-route LoginRoute { path: "/login", to: LoginPage }
-page LoginPage {
-  component: import Login from "@client/LoginPage"
+route CoverLetterPage { path: "/cover-letter/:id", to: CoverLetterPage }
+page CoverLetterPage {
+  component: import { CoverLetter } from "@client/CoverLetter"
 }
 
-route JobsRoute { path: "/jobs/:id", to: JobsPage }
-page JobsPage {
-  component: import Jobs from "@client/JobsPage"
-}
+
+// route LoginRoute { path: "/login", to: LoginPage }
+// page LoginPage {
+//   component: import Login from "@client/LoginPage"
+// }
+
+// route JobsRoute { path: "/jobs/:id", to: JobsPage }
+// page JobsPage {
+//   component: import Jobs from "@client/JobsPage"
+// }
 
 action generateCoverLetter {
   fn: import { generateCoverLetter } from "@server/actions.js",
@@ -104,42 +110,42 @@ action createJob {
   entities: [Job]
 }
 
-action updateJob {
-  fn: import { updateJob } from "@server/actions.js",
-  entities: [Job]
-}
+// action updateJob {
+//   fn: import { updateJob } from "@server/actions.js",
+//   entities: [Job]
+// }
 
-action updateCoverLetter {
-  fn: import { updateCoverLetter } from "@server/actions.js",
-  entities: [Job, CoverLetter]
-}
+// action updateCoverLetter {
+//   fn: import { updateCoverLetter } from "@server/actions.js",
+//   entities: [Job, CoverLetter]
+// }
 
-action uploadResume {
-  fn: import { uploadResume } from "@server/actions.js",
-  entities: [Resume]
-}
+// action uploadResume {
+//   fn: import { uploadResume } from "@server/actions.js",
+//   entities: [Resume]
+// }
 
-action shareIncrementer {
-  fn: import { shareIncrementer } from "@server/actions.js",
-  entities: [Job]
-}
+// action shareIncrementer {
+//   fn: import { shareIncrementer } from "@server/actions.js",
+//   entities: [Job]
+// }
 
-query getJobs {
-  fn: import { getJobs } from "@server/queries.js",
-  entities: [Job]
-}
+// query getJobs {
+//   fn: import { getJobs } from "@server/queries.js",
+//   entities: [Job]
+// }
 
-query getJob {
-  fn: import { getJob } from "@server/queries.js",
-  entities: [Job]
-}
+// query getJob {
+//   fn: import { getJob } from "@server/queries.js",
+//   entities: [Job]
+// }
 
 query getCoverLetter {
   fn: import { getCoverLetter } from "@server/queries.js",
   entities: [CoverLetter]
 }
 
-query getCoverLetters {
-  fn: import { getCoverLetters } from "@server/queries.js",
-  entities: [CoverLetter]
-}
+// query getCoverLetters {
+//   fn: import { getCoverLetters } from "@server/queries.js",
+//   entities: [CoverLetter]
+// }
