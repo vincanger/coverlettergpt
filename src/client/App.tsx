@@ -7,11 +7,13 @@ import { CallToAction } from './components/CallToAction';
 export default function App({ children }: { children: ReactNode }) {
   return (
     <ChakraProvider theme={theme}>
-      <NavBar />
-      <VStack gap={5}>
-        {children}
-        <CallToAction />
-      </VStack>
+
+        <NavBar />
+        <VStack gap={5}>
+          {children}
+          <CallToAction />
+        </VStack>
+
     </ChakraProvider>
   );
 }

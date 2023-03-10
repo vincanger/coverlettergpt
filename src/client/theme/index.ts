@@ -6,7 +6,7 @@ import { extendTheme } from '@chakra-ui/react';
 import { StyleFunctionProps } from '@chakra-ui/theme-tools';
 import { textStyles, fonts } from './text';
 import { semanticTokens } from './tokens';
-import { Input as ChakraInput, Button as ChakraButton, Textarea as ChakraTextarea } from '@chakra-ui/react';
+import { Input as ChakraInput, Button as ChakraButton, Textarea as ChakraTextarea, Checkbox as ChakraCheckbox } from '@chakra-ui/react';
 import {} from '@chakra-ui/react';
 
 const variantSolid = (props: any) => {
@@ -65,6 +65,33 @@ ChakraButton.defaultProps = {
   variant: 'solid',
   backdropFilter: 'blur(4px)',
 };
+
+ChakraCheckbox.defaultProps = {
+  ...ChakraCheckbox.defaultProps,
+  colorScheme: 'purple',
+};
+
+export const Checkbox = {
+  baseStyle: {
+    control: {
+      border: 'md',
+      borderColor: 'border-contrast-md',
+      bg: 'bg-contrast-sm',
+      _hover: {
+        bg: 'bg-contrast-md',
+        borderColor: 'border-contrast-md',
+      },
+      _focus: {
+        boxShadow: '0px 0px 0px 2px var(--chakra-colors-active)',
+        borderColor: 'active',
+      },
+      _disabled: {
+        bg: 'bg-contrast-xs',
+      },
+    }
+  }
+};
+
 
 ChakraInput.defaultProps = {
   ...ChakraInput.defaultProps,
@@ -173,6 +200,7 @@ export const theme = extendTheme({
     Textarea,
     Button,
     Link,
+    Checkbox,
     Heading: {
       baseStyle: {
         fontWeight: 'bold',
