@@ -11,7 +11,7 @@ app applyai {
       google: {},
       // gitHub: {}
     },
-    onAuthFailedRedirectTo: "/login",
+    onAuthFailedRedirectTo: "/",
   },
   db: {
     system: PostgreSQL
@@ -100,7 +100,7 @@ page JobsPage {
   component: import Jobs from "@client/JobsPage"
 }
 
-route ProfileRoute { path: "/profile/:id", to: ProfilePage }
+route ProfileRoute { path: "/profile", to: ProfilePage }
 page ProfilePage {
   authRequired: true,
   component: import Profile from "@client/ProfilePage"
