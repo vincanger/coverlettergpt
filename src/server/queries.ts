@@ -1,22 +1,26 @@
-import { GetCoverLetter, GetJobs, GetJob } from "@wasp/queries/types";
-import { CoverLetter, Job } from "@wasp/entities";
-import HttpError from "@wasp/core/HttpError.js";
+import { GetCoverLetter, GetJobs, GetJob } from '@wasp/queries/types';
+import { CoverLetter, Job } from '@wasp/entities';
+import HttpError from '@wasp/core/HttpError.js';
 
-export const getCoverLetter: GetCoverLetter<CoverLetter> = async (
-    { id },
-    context
-) => {
-
-    return context.entities.CoverLetter.findFirst({
+export const getCoverLetter: GetCoverLetter<CoverLetter> = async ({ id }, context) => {
+  if (!context.user) {
+      return context.entities.CoverLetter.findFirst({
         where: {
-            id,
-            user: { id: context.user.id },
-        }
-    });
+          id,
+        },
+      });
+  }
+
+  return context.entities.CoverLetter.findFirst({
+    where: {
+      id,
+      user: { id: context.user.id },
+    },
+  });
 };
 
 type GetCoverLetterArgs = {
-    id: string;
+  id: string;
 };
 
 export const getCoverLetters: GetCoverLetter<GetCoverLetterArgs, CoverLetter[]> = async ({ id }, context) => {
@@ -29,8 +33,8 @@ export const getCoverLetters: GetCoverLetter<GetCoverLetterArgs, CoverLetter[]> 
       job: { id },
       user: { id: context.user.id },
     },
-  })
-}
+  });
+};
 
 export const getJobs: GetJobs<Job[]> = async (_args, context) => {
   if (!context.user) {
@@ -44,8 +48,11 @@ export const getJobs: GetJobs<Job[]> = async (_args, context) => {
     include: {
       coverLetter: true,
     },
+    orderBy: {
+      createdAt: 'desc',
+    },
   });
-}
+};
 
 export const getJob: GetJob<Job> = async ({ id }, context) => {
   if (!context.user) {
@@ -61,4 +68,4 @@ export const getJob: GetJob<Job> = async ({ id }, context) => {
       coverLetter: true,
     },
   });
-}
+};

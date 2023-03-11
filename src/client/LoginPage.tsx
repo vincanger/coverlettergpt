@@ -1,31 +1,35 @@
-import SignUpForm from '@wasp/auth/forms/Signup';
-import LoginForm from '@wasp/auth/forms/Login';
-import useAuth from '@wasp/auth/useAuth.js';
-import logout from '@wasp/auth/logout.js';
-import { useState, useEffect } from 'react';
-import { Heading, VStack, Button } from '@chakra-ui/react';
+import useAuth from '@wasp/auth/useAuth';
+import logout from '@wasp/auth/logout';
+import {
+  signInUrl, 
+} from '@wasp/auth/helpers/Google';
+import { VStack, Button, Spinner, Text } from '@chakra-ui/react';
+import { AiOutlineGoogle } from 'react-icons/ai';
+import BorderBox from './components/BorderBox';
+import { useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
 
 export default function Login() {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const { data: user } = useAuth();
+
+  const { data: user, isLoading, error } = useAuth();
+  const history = useHistory();
 
   useEffect(() => {
-    console.log('user', user);
+    //refresh page
+    console.log(user);
   }, [user]);
 
   return (
-    <VStack>
-      {!user ? (
+    <BorderBox>
+      {isLoading && <Spinner/>}
+      {error && <Text>Something went wrong :(</Text>}
+      {!user && (
         <VStack>
-          <Button onClick={() => setIsSignUp(!isSignUp)}>{!isSignUp ? 'Sign Up' : 'Login'}</Button>
-          {isSignUp ? <SignUpForm /> : <LoginForm />}
-        </VStack>
-      ) : (
-        <VStack>
-          <p>Logged in as {user.username}</p>
-          <Button onClick={logout}>Logout</Button>
+          <Button leftIcon={<AiOutlineGoogle/>}>
+            <a href={signInUrl}>Sign In</a>
+          </Button>
         </VStack>
       )}
-    </VStack>
+    </BorderBox>
   );
 }

@@ -1,4 +1,4 @@
-import HttpError from "@wasp/core/HttpError.js";
+import HttpError from '@wasp/core/HttpError.js';
 import fetch from 'node-fetch';
 import type { Job, CoverLetter } from '@wasp/entities';
 import type { GenerateCoverLetter, CreateJob, UpdateCoverLetter, UpdateJob } from '@wasp/actions/types';
@@ -20,14 +20,15 @@ Include a job related joke at the end of the cover letter.`,
 };
 
 type CoverLetterPayload = Pick<CoverLetter, 'title' | 'jobId'> & {
-    content: string;
-    description: string;
-    isCompleteCoverLetter: boolean;
-    includeWittyRemark: boolean;
-  };
+  content: string;
+  description: string;
+  isCompleteCoverLetter: boolean;
+  includeWittyRemark: boolean;
+  temperature: number;
+};
 
 export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverLetter> = async (
-  { jobId, title, content, description, isCompleteCoverLetter, includeWittyRemark },
+  { jobId, title, content, description, isCompleteCoverLetter, includeWittyRemark, temperature },
   context
 ) => {
   // if (!context.user) {
@@ -57,7 +58,7 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
       },
     ],
     max_tokens: tokenNumber,
-    temperature: 0.6,
+    temperature,
   };
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -91,26 +92,13 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
   };
 
   const json = (await response.json()) as OpenAIResponse;
-  // console.log("\n\n response >>>>", json, "\n\n");
-  // console.log(
-  //     "\n\n coverLetter Create args >>>>",
-  //     {
-  //         title,
-  //         content: json.choices[0].message.content,
-  //         tokenUsage: json.usage.completion_tokens,
-  //         // user: { connect: { id: context.user.id } },
-  //         job: { connect: { id: jobId } }
-  //     },
-  //     "\n\n"
-  // );
 
-  if (context.user.id) {
+  if (!context.user) {
     return context.entities.CoverLetter.create({
       data: {
         title,
         content: json.choices[0].message.content,
         tokenUsage: json.usage.completion_tokens,
-        user: { connect: { id: context.user.id } },
         job: { connect: { id: jobId } },
       },
     });
@@ -121,6 +109,7 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
       title,
       content: json.choices[0].message.content,
       tokenUsage: json.usage.completion_tokens,
+      user: { connect: { id: context.user.id } },
       job: { connect: { id: jobId } },
     },
   });
@@ -129,19 +118,13 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
 export type JobPayload = Pick<Job, 'title' | 'company' | 'location' | 'description'>;
 
 export const createJob: CreateJob<JobPayload, Job> = ({ title, company, location, description }, context) => {
-  // console.log("create job");
-  // if (!context.user) {
-  //   throw new HttpError(401);
-  // }
-
-  if (context.user.id) {
+  if (!context.user) {
     return context.entities.Job.create({
       data: {
         title,
         description,
         location,
         company,
-        user: { connect: { id: context.user.id } },
       },
     });
   }
@@ -152,13 +135,17 @@ export const createJob: CreateJob<JobPayload, Job> = ({ title, company, location
       description,
       location,
       company,
+      user: { connect: { id: context.user.id } },
     },
   });
 };
 
 export type UpdateJobPayload = Pick<Job, 'id' | 'title' | 'company' | 'location' | 'description' | 'isCompleted'>;
 
-export const updateJob: UpdateJob<UpdateJobPayload, Job> = ({ id, title, company, location, description, isCompleted }, context) => {
+export const updateJob: UpdateJob<UpdateJobPayload, Job> = (
+  { id, title, company, location, description, isCompleted },
+  context
+) => {
   if (!context.user) {
     throw new HttpError(401);
   }
@@ -172,16 +159,16 @@ export const updateJob: UpdateJob<UpdateJobPayload, Job> = ({ id, title, company
       description,
       location,
       company,
-      isCompleted
+      isCompleted,
     },
   });
-}
+};
 
 export type UpdateCoverLetterPayload = Pick<Job, 'id' | 'description'> &
-  Pick<CoverLetter, 'content'> & { isCompleteCoverLetter: boolean; includeWittyRemark: boolean };
+  Pick<CoverLetter, 'content'> & { isCompleteCoverLetter: boolean; includeWittyRemark: boolean; temperature: number };
 
 export const updateCoverLetter: UpdateCoverLetter<UpdateCoverLetterPayload, Job | CoverLetter> = async (
-  { id, description, content, isCompleteCoverLetter, includeWittyRemark },
+  { id, description, content, isCompleteCoverLetter, includeWittyRemark, temperature },
   context
 ) => {
   if (!context.user) {
@@ -200,7 +187,15 @@ export const updateCoverLetter: UpdateCoverLetter<UpdateCoverLetterPayload, Job 
   }
 
   const coverLetter = await generateCoverLetter(
-    { jobId: id, title: job.title, content, description: job.description, isCompleteCoverLetter, includeWittyRemark },
+    {
+      jobId: id,
+      title: job.title,
+      content,
+      description: job.description,
+      isCompleteCoverLetter,
+      includeWittyRemark,
+      temperature,
+    },
     context
   );
 

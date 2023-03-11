@@ -13,6 +13,11 @@ import {
   Code,
   Checkbox,
   Spinner,
+  Slider,
+  SliderTrack,
+  SliderFilledTrack,
+  SliderThumb,
+  Tooltip,
 } from '@chakra-ui/react';
 import { ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
@@ -24,17 +29,23 @@ import createJob from '@wasp/actions/createJob';
 import updateCoverLetter from '@wasp/actions/updateCoverLetter';
 import * as pdfjsLib from 'pdfjs-dist';
 import { useState, useEffect, useRef } from 'react';
-// import Login from "./LoginPage";
 import { CoverLetter, Job } from '@wasp/entities';
 import BorderBox from './components/BorderBox';
+import { convertToSliderValue, convertToSliderLabel } from './components/CreativitySlider';
 
 function MainPage() {
   const [pdfText, setPdfText] = useState<string | null>(null);
   const [jobToFetch, setJobToFetch] = useState<string | null>(null);
   const [isCoverLetterUpdate, setIsCoverLetterUpdate] = useState<boolean>(false);
   const [isCompleteCoverLetter, setIsCompleteCoverLetter] = useState<boolean>(true);
+  const [sliderValue, setSliderValue] = useState(30);
+  const [showTooltip, setShowTooltip] = useState(false);
 
-  const { data: job, isLoading: isJobLoading } = useQuery<{ id: string | null }, Job>(getJob, { id: jobToFetch }, { enabled: !!jobToFetch });
+  const { data: job, isLoading: isJobLoading } = useQuery<{ id: string | null }, Job>(
+    getJob,
+    { id: jobToFetch },
+    { enabled: !!jobToFetch }
+  );
 
   const {
     handleSubmit,
@@ -45,7 +56,7 @@ function MainPage() {
 
   const history = useHistory();
   const loadingTextRef = useRef<HTMLDivElement>(null);
-  
+
   const urlParams = new URLSearchParams(window.location.search);
   const jobIdParam = urlParams.get('job');
 
@@ -56,13 +67,12 @@ function MainPage() {
       resetJob();
     } else {
       setIsCoverLetterUpdate(false);
-      console.log('resetting?')
       reset({
         title: '',
         company: '',
         location: '',
         description: '',
-      })
+      });
     }
   }, [jobIdParam, job]);
 
@@ -85,6 +95,7 @@ function MainPage() {
     if (event.target.files == null) {
       return;
     }
+
     setPdfText(null);
     const pdfFile = event.target.files[0];
 
@@ -124,6 +135,7 @@ function MainPage() {
     };
     //Step 3:Read the file as ArrayBuffer
     fileReader.readAsArrayBuffer(pdfFile);
+
   }
 
   type CoverLetterPayload = {
@@ -133,12 +145,16 @@ function MainPage() {
     description: string;
     isCompleteCoverLetter: boolean;
     includeWittyRemark: boolean;
+    temperature: number;
   };
 
   async function onSubmit(values: any): Promise<void> {
     try {
       const job = (await createJob(values)) as Job;
       let payload: CoverLetterPayload;
+
+      const creativityValue = convertToSliderValue(sliderValue);
+
       if (!pdfText) {
         alert('Please upload a pdf file');
         throw new Error('Please upload a pdf file');
@@ -150,29 +166,31 @@ function MainPage() {
           description: job.description,
           isCompleteCoverLetter,
           includeWittyRemark: values.includeWittyRemark,
+          temperature: creativityValue,
         };
       }
       setLoadingText();
-
       const coverLetter = (await generateCoverLetter(payload)) as CoverLetter;
       history.push(`/cover-letter/${coverLetter.id}`);
-
     } catch (error) {
       console.error(error);
     }
   }
 
   async function onUpdate(values: any): Promise<(Job & { coverLetter: CoverLetter[] }) | undefined> {
-    
     try {
       if (!job) {
         throw new Error('Job not found');
       }
+
+      const creativityValue = convertToSliderValue(sliderValue);
+
       const payload = {
         id: job.id,
         description: values.description,
         content: pdfText,
         isCompleteCoverLetter,
+        temperature: creativityValue,
       };
 
       setLoadingText();
@@ -191,7 +209,6 @@ function MainPage() {
   }
 
   async function setLoadingText() {
-    console.log('loadingTextRef', loadingTextRef.current);
     setTimeout(() => {
       loadingTextRef.current && (loadingTextRef.current.innerText = 'patience, my friend...');
     }, 1000);
@@ -206,7 +223,7 @@ function MainPage() {
     }, 35000);
   }
 
-  const showForm = isCoverLetterUpdate && job || !isCoverLetterUpdate;
+  const showForm = (isCoverLetterUpdate && job) || !isCoverLetterUpdate;
   const showSpinner = isCoverLetterUpdate && isJobLoading;
 
   return (
@@ -231,8 +248,8 @@ function MainPage() {
                   {...register('title', {
                     required: 'This is required',
                     minLength: {
-                      value: 4,
-                      message: 'Minimum length should be 4',
+                      value: 2,
+                      message: 'Minimum length should be 2',
                     },
                   })}
                   disabled={isCoverLetterUpdate}
@@ -247,8 +264,8 @@ function MainPage() {
                   {...register('company', {
                     required: 'This is required',
                     minLength: {
-                      value: 4,
-                      message: 'Minimum length should be 4',
+                      value: 1,
+                      message: 'Minimum length should be 1',
                     },
                   })}
                   disabled={isCoverLetterUpdate}
@@ -263,8 +280,8 @@ function MainPage() {
                   {...register('location', {
                     required: 'This is required',
                     minLength: {
-                      value: 4,
-                      message: 'Minimum length should be 4',
+                      value: 2,
+                      message: 'Minimum length should be 2',
                     },
                   })}
                   disabled={isCoverLetterUpdate}
@@ -282,39 +299,6 @@ function MainPage() {
                 />
                 <FormErrorMessage>{formErrors.description && formErrors.description.message}</FormErrorMessage>
               </FormControl>
-              <VStack
-                border={'sm'}
-                bg='bg-contrast-sm'
-                px={3}
-                alignItems='flex-start'
-                _hover={{
-                  bg: 'bg-contrast-md',
-                  borderColor: 'border-contrast-md',
-                }}
-                transition={
-                  'transform 0.05s ease-in, transform 0.05s ease-out, background 0.3s, opacity 0.3s, border 0.3s'
-                }
-              >
-                <FormControl display='flex' alignItems='center' mt={3} mb={3}>
-                  <Checkbox
-                    id='includeWittyRemark'
-                    defaultChecked={true}
-                    {...register('includeWittyRemark')}
-                  />
-                  <FormLabel
-                    htmlFor='includeWittyRemark'
-                    mb='0'
-                    ml={2}
-                    color='text-contrast-md'
-                    fontSize='sm'
-                    _hover={{
-                      color: 'text-contrast-lg',
-                    }}
-                  >
-                    Include a witty remark at the end of the letter
-                  </FormLabel>
-                </FormControl>
-              </VStack>
               <FormControl>
                 <Input
                   id='pdf'
@@ -329,8 +313,6 @@ function MainPage() {
                   border={'sm'}
                   bg='bg-contrast-sm'
                   p={3}
-                  borderRadius={0}
-                  borderBottomRadius={7}
                   alignItems='flex-start'
                   _hover={{
                     bg: 'bg-contrast-md',
@@ -341,7 +323,7 @@ function MainPage() {
                   }
                 >
                   <HStack>
-                    <Button size='sm' colorScheme='contrast'>
+                    <Button size='sm' colorScheme='contrast' >
                       <label htmlFor='pdf'>Upload CV</label>
                     </Button>
                     {pdfText && <Text fontSize={'sm'}>👍 uploaded</Text>}
@@ -351,6 +333,87 @@ function MainPage() {
                   </FormHelperText>
                 </VStack>
               </FormControl>
+              <VStack
+                border={'sm'}
+                bg='bg-contrast-sm'
+                px={3}
+                alignItems='flex-start'
+                _hover={{
+                  bg: 'bg-contrast-md',
+                  borderColor: 'border-contrast-md',
+                }}
+                transition={
+                  'transform 0.05s ease-in, transform 0.05s ease-out, background 0.3s, opacity 0.3s, border 0.3s'
+                }
+              >
+                <FormControl my={2}>
+                  <Slider
+                    id='temperature'
+                    min={0}
+                    max={85}
+                    defaultValue={30}
+                    colorScheme='purple'
+                    onChange={(v) => setSliderValue(v)}
+                    onMouseEnter={() => setShowTooltip(true)}
+                    onMouseLeave={() => setShowTooltip(false)}
+                  >
+                    <SliderTrack>
+                      <SliderFilledTrack />
+                    </SliderTrack>
+                    <Tooltip
+                      hasArrow
+                      bg='purple.300'
+                      color='white'
+                      placement='top'
+                      isOpen={showTooltip}
+                      label={`${convertToSliderLabel(sliderValue)}`}
+                    >
+                      <SliderThumb />
+                    </Tooltip>
+                  </Slider>
+                  <FormLabel
+                    htmlFor='temperature'
+                    color='text-contrast-md'
+                    fontSize='sm'
+                    _hover={{
+                      color: 'text-contrast-lg',
+                    }}
+                  >
+                    cover letter creativity level
+                  </FormLabel>
+                </FormControl>
+              </VStack>
+              <VStack
+                border={'sm'}
+                bg='bg-contrast-sm'
+                px={3}
+                borderRadius={0}
+                borderBottomRadius={7}
+                alignItems='flex-start'
+                _hover={{
+                  bg: 'bg-contrast-md',
+                  borderColor: 'border-contrast-md',
+                }}
+                transition={
+                  'transform 0.05s ease-in, transform 0.05s ease-out, background 0.3s, opacity 0.3s, border 0.3s'
+                }
+              >
+                <FormControl display='flex' alignItems='center' mt={3} mb={3}>
+                  <Checkbox id='includeWittyRemark' defaultChecked={true} {...register('includeWittyRemark')} />
+                  <FormLabel
+                    htmlFor='includeWittyRemark'
+                    mb='0'
+                    ml={2}
+                    color='text-contrast-md'
+                    fontSize='sm'
+                    _hover={{
+                      color: 'text-contrast-lg',
+                    }}
+                  >
+                    include a witty remark at the end of the letter
+                  </FormLabel>
+                </FormControl>
+              </VStack>
               <HStack alignItems='flex-end' gap={1}>
                 <Button colorScheme='purple' mt={3} size='sm' isLoading={isSubmitting} type='submit'>
                   {!isCoverLetterUpdate ? 'Generate Cover Letter' : 'Create New Cover Letter'}

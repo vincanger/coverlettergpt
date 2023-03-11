@@ -5,9 +5,10 @@ app applyai {
   title: "CoverLetterGPT",
   auth: {
     userEntity: User,
+    externalAuthEntity: SocialLogin,
     methods: {
-      usernameAndPassword: {},
-      // google: {},
+      // usernameAndPassword: {},
+      google: {},
       // gitHub: {}
     },
     onAuthFailedRedirectTo: "/login",
@@ -38,8 +39,18 @@ entity User {=psl
   password    String
   letters     CoverLetter[]
   jobs        Job[]
+  externalAuthAssociations  SocialLogin[]
 psl=}
 
+entity SocialLogin {=psl
+  id          String    @id @default(uuid())
+  provider    String
+  providerId  String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+  createdAt   DateTime  @default(now())
+  @@unique([provider, providerId, userId])
+psl=}
 
 entity CoverLetter {=psl
   id         String     @id @default(uuid())
@@ -78,13 +89,12 @@ page CoverLetterPage {
   component: import { CoverLetter } from "@client/CoverLetter"
 }
 
-
 route LoginRoute { path: "/login", to: LoginPage }
 page LoginPage {
   component: import Login from "@client/LoginPage"
 }
 
-route JobsRoute { path: "/jobs/:id", to: JobsPage }
+route JobsRoute { path: "/jobs", to: JobsPage }
 page JobsPage {
   authRequired: true,
   component: import Jobs from "@client/JobsPage"

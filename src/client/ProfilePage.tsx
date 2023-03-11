@@ -18,8 +18,8 @@ export default function ProfilePage({ match }: { match: match<{ id: string }> })
 
   return (
     <BorderBox>
-      <Heading>👋 Hi {user.username}</Heading>
-      <Text>...check back here soon for more</Text>
+      <Heading>👋 Hi </Heading>
+      <Text textAlign='center'>Thanks for signing up and using CoverLetterGPT. Check back here soon for more!</Text>
       <Button onClick={() => logout()}>Logout</Button>
     </BorderBox>
   );

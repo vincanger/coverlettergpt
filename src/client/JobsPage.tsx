@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import useAuth from '@wasp/auth/useAuth';
 import {
   Heading,
   Spacer,
@@ -15,10 +14,11 @@ import {
   useDisclosure,
   Divider,
   Checkbox,
-  Spinner
+  Spinner,
+  Tooltip
 } from '@chakra-ui/react';
 import { useQuery } from '@wasp/queries';
-import { useAction } from '@wasp/actions';
+import { OptimisticUpdateDefinition, useAction } from '@wasp/actions';
 import getJobs from '@wasp/queries/getJobs';
 import getCoverLetters from '@wasp/queries/getCoverLetters';
 import updateJob from '@wasp/actions/updateJob';
@@ -27,14 +27,11 @@ import ModalElement from './components/Modal';
 import DescriptionModal from './components/DescriptionModal';
 import BorderBox from './components/BorderBox';
 import { useHistory } from 'react-router-dom';
-import { useEffect } from 'react';
-// import { useMutation, useQueryClient } from 'react-query';
 
-function JobsPage(props: any) {
+function JobsPage() {
   const [JobId, setJobId] = useState<string | null>(null);
   const [descriptionText, setDescriptionText] = useState<string | null>(null);
 
-  const { data: user } = useAuth();
   const history = useHistory();
 
   const { data: jobs, isLoading } = useQuery<unknown, Job[]>(getJobs);
@@ -44,44 +41,16 @@ function JobsPage(props: any) {
     { enabled: !!JobId }
   );
 
-  useEffect(() => {
-    console.log('jobs>>>> ', jobs);
-  }, [jobs]);
-
-  const updateJobOptimistically = useAction(updateJob, {
+  const updateJobOptimistically = useAction<Pick<Job, 'id' | 'isCompleted'>, Job[]>(updateJob, {
     optimisticUpdates: [
       {
         getQuerySpecifier: () => [getJobs],
-        updateQuery: ({ isCompleted }, oldData) => ({ ...oldData, isCompleted }),
-      },
+        updateQuery: ({ isCompleted, id }, oldData) => {
+          return oldData && oldData.map((job) => (job.id === id ? { ...job, isCompleted } : job));
+        },
+      } as OptimisticUpdateDefinition<Pick<Job, 'id' | 'isCompleted'>, Job[]>,
     ],
   });
-
-  // const queryClient = useQueryClient();
-  // const updateJobOptimistically = useMutation(updateJob, {
-  //   onMutate: async (newJob) => {
-  //     await queryClient.cancelQueries('operations/get-jobs');
-  //     const previousJobs = queryClient.getQueryData('operations/get-jobs');
-      
-  //     console.log('previousJobs', previousJobs) // undefined 
-
-  //     queryClient.setQueryData('operations/get-jobs', (old: any) => {
-        
-  //       console.log('old', old) // undefined
-
-  //       return old.map((job: Job) => (job.id === newJob.id ? newJob : job));
-  //     });
-  //     return { previousJobs };
-  //   },
-  //   onError: (err, newJob, context) => {
-  //     queryClient.setQueryData('operations/get-jobs', context?.previousJobs);
-  //   },
-  //   onSettled: () => {
-  //     queryClient.invalidateQueries('operations/get-jobs');
-  //   },
-  // });
-      
-
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: desIsOpen, onOpen: desOnOpen, onClose: desOnClose } = useDisclosure();
@@ -103,10 +72,7 @@ function JobsPage(props: any) {
         description: job.description,
         isCompleted: e.target.checked,
       };
-      console.log('payload, ', payload);
-      // updateJob(payload)
       updateJobOptimistically(payload);
-      // await updateJobOptimistically.mutateAsync(payload);
     } catch (error) {
       console.error(error);
     }
@@ -119,10 +85,11 @@ function JobsPage(props: any) {
   return (
     <VStack gap={1}>
       <BorderBox>
-        <Heading size='md'>{user?.username}'s Jobs</Heading>
+        <Heading size='md'>Your Jobs</Heading>
         {isLoading && <Spinner />}
         <Accordion width='100%'>
-          {jobs && !isLoading &&
+          {jobs &&
+            !isLoading &&
             jobs.map((job: Job) => (
               <AccordionItem key={job.id}>
                 <h2>
@@ -139,10 +106,10 @@ function JobsPage(props: any) {
                       <AccordionIcon />
                     </AccordionButton>
                   </HStack>
-                  <Divider maxW='40%' variant='dashed' />
                 </h2>
                 <AccordionPanel pb={4} pt={2}>
-                  <VStack alignItems={'stretch'} mb={1}>
+                  <Divider maxW='40%' variant='dashed' />
+                  <VStack alignItems={'stretch'} my={1}>
                     <Text>
                       <b>Location:</b> {job.location}
                     </Text>
@@ -163,7 +130,7 @@ function JobsPage(props: any) {
                     </HStack>
                     <HStack py={1} justify='space-between'>
                       <Button onClick={() => coverLetterHandler(job)} size='sm'>
-                        Display Cover Letter
+                        Display Cover Letter(s)
                       </Button>
                       <Button onClick={() => updateCoverLetterHandler(job.id)} size='sm'>
                         Create Additional Cover Letter
@@ -178,7 +145,9 @@ function JobsPage(props: any) {
       <Button size='sm' colorScheme='purple' alignSelf='flex-end' onClick={() => history.push('/')}>
         Create New Job
       </Button>
-      {coverLetter && <ModalElement coverLetterData={coverLetter} isOpen={isOpen} onOpen={onOpen} onClose={onClose} />}
+      {coverLetter && coverLetter.length > 0 && (
+        <ModalElement coverLetterData={coverLetter} isOpen={isOpen} onOpen={onOpen} onClose={onClose} />
+      )}
       {descriptionText && (
         <DescriptionModal description={descriptionText} isOpen={desIsOpen} onOpen={desOnOpen} onClose={desOnClose} />
       )}

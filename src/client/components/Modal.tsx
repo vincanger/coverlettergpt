@@ -38,12 +38,12 @@ export default function ModalElement({ coverLetterData, isOpen, onOpen, onClose 
     <Modal isOpen={isOpen} onClose={onClose} initialFocusRef={copyButtonRef}>
       <ModalOverlay />
       <ModalContent maxH='2xl' maxW='2xl' bgColor='bg-modal'>
-        <ModalHeader>Your Cover Letter</ModalHeader>
+        <ModalHeader>Your Cover Letter{coverLetterData.length>1 && 's'}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           {coverLetterData.length > 1 && (
             <Select
-              // placeholder='Select option'
+              placeholder='Select Cover Letter'
               onChange={(coverLetter) => setSelectedCoverLetter(coverLetter.target.value)}
             >
               {coverLetterData.map((coverLetter) => (
