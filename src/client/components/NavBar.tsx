@@ -102,7 +102,7 @@ function NavButton({ children, icon, to, ...props }: NavButtonProps) {
 function MobileButton({
   children,
   icon,
-  isUser
+  isUser,
 }: {
   children: React.ReactNode;
   icon: React.ReactElement;
@@ -128,24 +128,18 @@ function MobileButton({
       <MenuList bgColor='gray.900'>
         {isUser ? (
           <>
-            <MenuItem>
-              <Link as={RouterLink} to={`/jobs`}>
-                Jobs Dashboard
-              </Link>
-            </MenuItem>
-            <MenuItem>
-              <Link as={RouterLink} to={`/profile`}>
-                Profile
-              </Link>
-            </MenuItem>
+            <Link as={RouterLink} to={`/jobs`}>
+              <MenuItem>Jobs Dashboard</MenuItem>
+            </Link>
+            <Link as={RouterLink} to={`/profile`}>
+              <MenuItem>Profile</MenuItem>
+            </Link>
           </>
         ) : (
           <>
-            <MenuItem>
-              <Link as={RouterLink} to='/login'>
-                Login
-              </Link>
-            </MenuItem>
+            <Link as={RouterLink} to='/login'>
+              <MenuItem>Login</MenuItem> 
+            </Link>
           </>
         )}
       </MenuList>

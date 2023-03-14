@@ -32,6 +32,7 @@ import { useState, useEffect, useRef } from 'react';
 import { CoverLetter, Job } from '@wasp/entities';
 import BorderBox from './components/BorderBox';
 import { convertToSliderValue, convertToSliderLabel } from './components/CreativitySlider';
+import type { CoverLetterPayload } from './types';
 
 function MainPage() {
   const [pdfText, setPdfText] = useState<string | null>(null);
@@ -91,6 +92,7 @@ function MainPage() {
     }
   }
 
+  // pdf to text parser
   async function onFileUpload(event: ChangeEvent<HTMLInputElement>) {
     if (event.target.files == null) {
       return;
@@ -99,17 +101,17 @@ function MainPage() {
     setPdfText(null);
     const pdfFile = event.target.files[0];
 
-    //Step 2: Read the file using file reader
+    // Read the file using file reader
     const fileReader = new FileReader();
 
     fileReader.onload = function () {
-      //Step 4:turn array buffer into typed array
+      // turn array buffer into typed array
       if (this.result == null || !(this.result instanceof ArrayBuffer)) {
         return;
       }
       const typedarray = new Uint8Array(this.result);
 
-      //Step 5:pdfjs should be able to read this
+      // pdfjs should be able to read this
       pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.js`;
       const loadingTask = pdfjsLib.getDocument(typedarray);
       let textBuilder: string = '';
@@ -128,25 +130,13 @@ function MainPage() {
             })
             .join(' ');
           textBuilder += text;
-          // Do something with the text content, for example, log it to the console
         }
         setPdfText(textBuilder);
       });
     };
-    //Step 3:Read the file as ArrayBuffer
+    // Read the file as ArrayBuffer
     fileReader.readAsArrayBuffer(pdfFile);
-
   }
-
-  type CoverLetterPayload = {
-    jobId: string;
-    title: string;
-    content: string;
-    description: string;
-    isCompleteCoverLetter: boolean;
-    includeWittyRemark: boolean;
-    temperature: number;
-  };
 
   async function onSubmit(values: any): Promise<void> {
     try {
@@ -173,6 +163,7 @@ function MainPage() {
       const coverLetter = (await generateCoverLetter(payload)) as CoverLetter;
       history.push(`/cover-letter/${coverLetter.id}`);
     } catch (error) {
+      alert('Something went wrong, please try again');
       console.error(error);
     }
   }
@@ -204,6 +195,7 @@ function MainPage() {
 
       return updatedJob;
     } catch (error) {
+      alert('Something went wrong, please try again');
       console.error(error);
     }
   }
@@ -323,7 +315,7 @@ function MainPage() {
                   }
                 >
                   <HStack>
-                    <Button size='sm' colorScheme='contrast' >
+                    <Button size='sm' colorScheme='contrast'>
                       <label htmlFor='pdf'>Upload CV</label>
                     </Button>
                     {pdfText && <Text fontSize={'sm'}>👍 uploaded</Text>}

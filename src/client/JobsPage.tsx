@@ -15,7 +15,6 @@ import {
   Divider,
   Checkbox,
   Spinner,
-  Tooltip
 } from '@chakra-ui/react';
 import { useQuery } from '@wasp/queries';
 import { OptimisticUpdateDefinition, useAction } from '@wasp/actions';

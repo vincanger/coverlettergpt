@@ -3,13 +3,12 @@ app applyai {
     version: "^0.9.0"
   },
   title: "CoverLetterGPT",
+  // Auth out of the box! https://wasp-lang.dev/docs/language/features#authentication--authorization
   auth: {
     userEntity: User,
     externalAuthEntity: SocialLogin,
     methods: {
-      // usernameAndPassword: {},
       google: {},
-      // gitHub: {}
     },
     onAuthFailedRedirectTo: "/",
   },
@@ -18,6 +17,10 @@ app applyai {
   },
   client: {
     rootComponent: import App from "@client/App",
+  },
+  server: {
+    // this imports a custom server endpoint for the location-based Stripe link
+    setupFn: import getLocation from "@server/getLocation.js"
   },
   dependencies: [
     ("node-fetch", "3.3.0"),
@@ -29,9 +32,14 @@ app applyai {
     ("react-hook-form", "7.43.1"),
     ("pdfjs-dist", "3.3.122"),
     ("@types/pdfjs-dist", "2.10.378"),
-    ("react-query", "^3.39.2")
+    ("react-query", "^3.39.2"),
+    ("axios", "^0.27.2")
   ],
 }
+
+/* 💽 Wasp defines DB entities via Prisma Database Models: 
+ * https://wasp-lang.dev/docs/language/features#entity
+ */
 
 entity User {=psl
   id          Int     @id @default(autoincrement())
@@ -79,6 +87,10 @@ entity Job {=psl
   isCompleted   Boolean        @default(false)
 psl=}
 
+/* 📡 These are the Wasp Routes (You can protect them easily w/ 'authRequired: true');
+ * https://wasp-lang.dev/docs/language/features#route
+ */
+
 route RootRoute { path: "/", to: MainPage }
 page MainPage {
   component: import Main from "@client/MainPage"
@@ -105,6 +117,10 @@ page ProfilePage {
   authRequired: true,
   component: import Profile from "@client/ProfilePage"
 }
+
+/* ⛑ These are the Wasp Operations, which allow the client and server to interact:
+ * https://wasp-lang.dev/docs/language/features#queries-and-actions-aka-operations
+ */
 
 action generateCoverLetter {
   fn: import { generateCoverLetter } from "@server/actions.js",
