@@ -2,9 +2,6 @@
 
 ## Running it locally
 
-Make sure you have [Wasp](https://wasp-lang.dev) installed by running `curl -sSL https://get.wasp-lang.dev/installer.sh | sh` in your terminal.
-Then, follow these steps:
-
 1. Install [Wasp](https://wasp-lang.dev) by running `curl -sSL https://get.wasp-lang.dev/installer.sh | sh` in your terminal.
 2. Create a `.env.server` file in the root of the project
 3. Copy the `env.example` file contents to `.env.server` and fill in your API keys
