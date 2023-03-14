@@ -1,4 +1,4 @@
-# coverlettergpt
+# CoverLetterGPT.xyz
 
 ## Running it locally
 
