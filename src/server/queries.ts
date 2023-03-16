@@ -1,5 +1,5 @@
-import { GetCoverLetter, GetJobs, GetJob } from '@wasp/queries/types';
-import { CoverLetter, Job } from '@wasp/entities';
+import { GetCoverLetter, GetJobs, GetJob, GetUserInfo } from '@wasp/queries/types';
+import { CoverLetter, Job, User } from '@wasp/entities';
 import HttpError from '@wasp/core/HttpError.js';
 
 export const getCoverLetter: GetCoverLetter<CoverLetter> = async ({ id }, context) => {
@@ -69,3 +69,18 @@ export const getJob: GetJob<Job> = async ({ id }, context) => {
     },
   });
 };
+
+export const getUserInfo: GetUserInfo<User> = async (_args, context) => {
+  if (!context.user) {
+    throw new HttpError(401);
+  }
+
+  return context.entities.User.findFirst({
+    where: {
+      id: context.user.id,
+    },
+    include: {
+      letters: true,
+    }
+  });
+}

@@ -8,7 +8,10 @@ app applyai {
     userEntity: User,
     externalAuthEntity: SocialLogin,
     methods: {
-      google: {},
+      google: {
+        getUserFieldsFn: import { getUserFields } from "@server/auth.js",
+        configFn: import { config } from "@server/auth.js",
+      },
     },
     onAuthFailedRedirectTo: "/",
   },
@@ -17,10 +20,6 @@ app applyai {
   },
   client: {
     rootComponent: import App from "@client/App",
-  },
-  server: {
-    // this imports a custom server endpoint for the location-based Stripe link
-    setupFn: import getLocation from "@server/getLocation.js"
   },
   dependencies: [
     ("node-fetch", "3.3.0"),
@@ -32,8 +31,6 @@ app applyai {
     ("react-hook-form", "7.43.1"),
     ("pdfjs-dist", "3.3.122"),
     ("@types/pdfjs-dist", "2.10.378"),
-    ("react-query", "^3.39.2"),
-    ("axios", "^0.27.2")
   ],
 }
 
@@ -45,6 +42,7 @@ entity User {=psl
   id          Int     @id @default(autoincrement())
   username    String  @unique
   password    String
+  email       String?
   letters     CoverLetter[]
   jobs        Job[]
   externalAuthAssociations  SocialLogin[]
@@ -160,4 +158,9 @@ query getCoverLetter {
 query getCoverLetters {
   fn: import { getCoverLetters } from "@server/queries.js",
   entities: [CoverLetter]
+}
+
+query getUserInfo {
+  fn: import { getUserInfo } from "@server/queries.js",
+  entities: [User]
 }

@@ -18,21 +18,25 @@ import {
   SliderFilledTrack,
   SliderThumb,
   Tooltip,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { useHistory } from 'react-router-dom';
 import { useQuery } from '@wasp/queries';
 import getJob from '@wasp/queries/getJob';
+import getUserInfo from '@wasp/queries/getUserInfo';
 import generateCoverLetter from '@wasp/actions/generateCoverLetter';
 import createJob from '@wasp/actions/createJob';
 import updateCoverLetter from '@wasp/actions/updateCoverLetter';
 import * as pdfjsLib from 'pdfjs-dist';
 import { useState, useEffect, useRef } from 'react';
-import { CoverLetter, Job } from '@wasp/entities';
+import { CoverLetter, Job, User } from '@wasp/entities';
 import BorderBox from './components/BorderBox';
 import { convertToSliderValue, convertToSliderLabel } from './components/CreativitySlider';
 import type { CoverLetterPayload } from './types';
+import useAuth from '@wasp/auth/useAuth';
+import LeaveATip from './components/AlertDialog';
 
 function MainPage() {
   const [pdfText, setPdfText] = useState<string | null>(null);
@@ -41,6 +45,9 @@ function MainPage() {
   const [isCompleteCoverLetter, setIsCompleteCoverLetter] = useState<boolean>(true);
   const [sliderValue, setSliderValue] = useState(30);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
+
+  const { data: user } = useAuth();
 
   const { data: job, isLoading: isJobLoading } = useQuery<{ id: string | null }, Job>(
     getJob,
@@ -48,12 +55,16 @@ function MainPage() {
     { enabled: !!jobToFetch }
   );
 
+  const { data: userInfo } = useQuery<{ id: number | null }, User & { letters: [] }>(getUserInfo, { id: userId });
+
   const {
     handleSubmit,
     register,
     reset,
     formState: { errors: formErrors, isSubmitting },
   } = useForm();
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const history = useHistory();
   const loadingTextRef = useRef<HTMLDivElement>(null);
@@ -139,6 +150,8 @@ function MainPage() {
   }
 
   async function onSubmit(values: any): Promise<void> {
+    checkUsageNumbers();
+
     try {
       const job = (await createJob(values)) as Job;
       let payload: CoverLetterPayload;
@@ -169,6 +182,8 @@ function MainPage() {
   }
 
   async function onUpdate(values: any): Promise<(Job & { coverLetter: CoverLetter[] }) | undefined> {
+    checkUsageNumbers();
+
     try {
       if (!job) {
         throw new Error('Job not found');
@@ -213,6 +228,14 @@ function MainPage() {
     setTimeout(() => {
       loadingTextRef.current && (loadingTextRef.current.innerText = '');
     }, 35000);
+  }
+
+  async function checkUsageNumbers() {
+    if (user && userInfo) {
+      if (userInfo.letters.length > 2) {
+        onOpen();
+      }
+    }
   }
 
   const showForm = (isCoverLetterUpdate && job) || !isCoverLetterUpdate;
@@ -418,6 +441,7 @@ function MainPage() {
           )}
         </form>
       </BorderBox>
+      <LeaveATip isOpen={isOpen} onOpen={onOpen} onClose={onClose} />
     </>
   );
 }

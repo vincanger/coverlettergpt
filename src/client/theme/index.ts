@@ -6,7 +6,7 @@ import { extendTheme } from '@chakra-ui/react';
 import { StyleFunctionProps } from '@chakra-ui/theme-tools';
 import { textStyles, fonts } from './text';
 import { semanticTokens } from './tokens';
-import { Input as ChakraInput, Button as ChakraButton, Textarea as ChakraTextarea, Checkbox as ChakraCheckbox } from '@chakra-ui/react';
+import { Input as ChakraInput, Button as ChakraButton, Textarea as ChakraTextarea, Checkbox as ChakraCheckbox, AlertDialog as ChakraAlertDialog } from '@chakra-ui/react';
 import {} from '@chakra-ui/react';
 
 const variantSolid = (props: any) => {
@@ -201,6 +201,26 @@ export const theme = extendTheme({
     Button,
     Link,
     Checkbox,
+    // AlertDialog: {
+    //   baseStyle: {
+    //     body: {
+    //       bgColor: 'bg-body',
+    //     },
+    //     dialog: {
+    //       bg: 'bg-contrast-sm',
+    //       color: 'text-contrast-lg',
+    //       border: 'sm',
+    //       borderColor: 'border-contrast-md',
+    //       boxShadow: '0px 0px 0px 1px var(--chakra-colors-active)',
+    //     },
+    //     header: {
+    //       color: 'text-contrast-lg',
+    //     },
+    //     footer: {
+    //       color: 'text-contrast-md',
+    //     },
+    //   },
+    // },
     Heading: {
       baseStyle: {
         fontWeight: 'bold',

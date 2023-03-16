@@ -13,9 +13,9 @@ export default function Login() {
       {error && <Text>Something went wrong :(</Text>}
       {!user && (
         <VStack>
-          <Button leftIcon={<AiOutlineGoogle />}>
-            <a href={signInUrl}>Sign In</a>
-          </Button>
+          <a href={signInUrl}>
+            <Button leftIcon={<AiOutlineGoogle />}>Sign In</Button>
+          </a>
         </VStack>
       )}
     </BorderBox>
