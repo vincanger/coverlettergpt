@@ -27,6 +27,7 @@ export function CallToAction() {
             display='grid'
             gridTemplateColumns='auto 1fr'
             gridGap={2}
+            alignItems='center'
           >
             <FaGithub />
             GitHub
