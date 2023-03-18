@@ -24,6 +24,6 @@ Also, [Chakra-ui](https://chakra-ui.com/) is great for building nice looking UIâ
 
 For more info on the prompts and configuration I used for the [OpenAI](https://openai.com/) API, check out the `src/server/actions.ts` file.
 
-[Stripe](https://stripe.com/) makes the `Buy Me a Coffee` functionality super easy. I just used there `Payment Link` feature and configured it as a donate button
+[Stripe](https://stripe.com/) makes the `Buy Me a Coffee` functionality super easy. I just used their `Payment Link` feature and configured it as a donate button.
 
-If you have any other questions, feel free to reach out to me on [twitter](https://twitter.com/hot_town)
+If you have any other questions, feel free to reach out to me on [Twitter](https://twitter.com/hot_town).
