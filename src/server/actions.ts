@@ -1,7 +1,21 @@
 import HttpError from '@wasp/core/HttpError.js';
 import fetch from 'node-fetch';
-import type { Job, CoverLetter } from '@wasp/entities';
-import type { GenerateCoverLetter, CreateJob, UpdateCoverLetter, UpdateJob } from '@wasp/actions/types';
+import type { Job, CoverLetter, User } from '@wasp/entities';
+import type {
+  GenerateCoverLetter,
+  CreateJob,
+  UpdateCoverLetter,
+  UpdateJob,
+  UpdateUser,
+  StripePayment,
+} from '@wasp/actions/types';
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_KEY!, {
+  apiVersion: '2022-11-15',
+});
+
+const DOMAIN = process.env.WASP_WEB_CLIENT_URL || 'http://localhost:3000';
 
 const gptConfig = {
   completeCoverLetter: `You are a cover letter generator.
@@ -31,9 +45,9 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
   { jobId, title, content, description, isCompleteCoverLetter, includeWittyRemark, temperature },
   context
 ) => {
-  // if (!context.user) {
-  //   throw new HttpError(401);
-  // }
+  if (!context.user) {
+    throw new HttpError(401);
+  }
 
   let command;
   let tokenNumber;
@@ -93,17 +107,6 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
 
   const json = (await response.json()) as OpenAIResponse;
 
-  if (!context.user) {
-    return context.entities.CoverLetter.create({
-      data: {
-        title,
-        content: json.choices[0].message.content,
-        tokenUsage: json.usage.completion_tokens,
-        job: { connect: { id: jobId } },
-      },
-    });
-  }
-
   return context.entities.CoverLetter.create({
     data: {
       title,
@@ -119,14 +122,7 @@ export type JobPayload = Pick<Job, 'title' | 'company' | 'location' | 'descripti
 
 export const createJob: CreateJob<JobPayload, Job> = ({ title, company, location, description }, context) => {
   if (!context.user) {
-    return context.entities.Job.create({
-      data: {
-        title,
-        description,
-        location,
-        company,
-      },
-    });
+    throw new HttpError(401);
   }
 
   return context.entities.Job.create({
@@ -210,5 +206,106 @@ export const updateCoverLetter: UpdateCoverLetter<UpdateCoverLetterPayload, Job 
     include: {
       coverLetter: true,
     },
+  });
+};
+
+type UpdateUserPayload = Pick<User, 'email'>;
+type UpdateUserResult = Pick<User, 'id' | 'email' | 'hasPaid'>;
+
+export const updateUser: UpdateUser<UpdateUserPayload, UpdateUserResult> = async ({ email }, context) => {
+  if (!context.user) {
+    throw new HttpError(401);
+  }
+
+  const { checkoutSessionId } = context.user;
+
+  let status: Stripe.Checkout.Session.Status | null = null;
+  if (checkoutSessionId) {
+    const session: Stripe.Checkout.Session = await stripe.checkout.sessions.retrieve(checkoutSessionId);
+    status = session?.status;
+  }
+
+  return context.entities.User.update({
+    where: {
+      id: context.user.id,
+    },
+    data: {
+      email: email ? email : undefined,
+      hasPaid: status === 'complete' ? true : false,
+    },
+    select: {
+      id: true,
+      email: true,
+      hasPaid: true,
+    },
+  });
+};
+
+type StripePaymentResult = {
+  sessionUrl: string | null;
+  sessionId: string;
+};
+
+export const stripePayment: StripePayment<string, StripePaymentResult> = async (email, context) => {
+  if (!context.user) {
+    throw new HttpError(401);
+  }
+
+  let customer: Stripe.Customer;
+
+  if (email) {
+    const stripeCustomer = await stripe.customers.list({
+      email,
+    });
+
+    if (!stripeCustomer.data.length) {
+      customer = await stripe.customers.create({
+        email,
+      });
+    } else {
+      customer = stripeCustomer.data[0];
+    }
+  } else {
+    console.error('User does not have an email in their profile');
+    throw new HttpError(400);
+  }
+
+  const session: Stripe.Checkout.Session = await stripe.checkout.sessions.create({
+    line_items: [
+      {
+        price: process.env.PRODUCT_PRICE_ID!,
+        quantity: 1,
+      },
+    ],
+    mode: 'payment',
+    success_url: `${DOMAIN}/checkout?success=true`,
+    cancel_url: `${DOMAIN}/checkout?canceled=true`,
+    automatic_tax: { enabled: true },
+    customer_update: {
+      address: 'auto',
+    },
+    customer: customer.id,
+  });
+
+  if (session?.id) {
+    await context.entities.User.update({
+      where: {
+        id: context.user.id,
+      },
+      data: {
+        checkoutSessionId: session.id,
+      },
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    if (!session) {
+      reject(new Error('Could not create a Stripe session'));
+    } else {
+      resolve({
+        sessionUrl: session.url,
+        sessionId: session.id,
+      });
+    }
   });
 };

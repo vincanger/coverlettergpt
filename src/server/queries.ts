@@ -1,14 +1,17 @@
 import { GetCoverLetter, GetJobs, GetJob, GetUserInfo } from '@wasp/queries/types';
 import { CoverLetter, Job, User } from '@wasp/entities';
 import HttpError from '@wasp/core/HttpError.js';
+import { Prisma, PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export const getCoverLetter: GetCoverLetter<CoverLetter> = async ({ id }, context) => {
   if (!context.user) {
-      return context.entities.CoverLetter.findFirst({
-        where: {
-          id,
-        },
-      });
+    return context.entities.CoverLetter.findFirst({
+      where: {
+        id,
+      },
+    });
   }
 
   return context.entities.CoverLetter.findFirst({
@@ -70,7 +73,7 @@ export const getJob: GetJob<Job> = async ({ id }, context) => {
   });
 };
 
-export const getUserInfo: GetUserInfo<User> = async (_args, context) => {
+export const getUserInfo: GetUserInfo<User & { letters: CoverLetter[] }> = async (_args, context) => {
   if (!context.user) {
     throw new HttpError(401);
   }
@@ -79,8 +82,11 @@ export const getUserInfo: GetUserInfo<User> = async (_args, context) => {
     where: {
       id: context.user.id,
     },
-    include: {
+    select: {
       letters: true,
-    }
+      id: true,
+      username: true,
+      email: true,
+    },
   });
-}
+};

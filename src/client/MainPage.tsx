@@ -36,7 +36,7 @@ import BorderBox from './components/BorderBox';
 import { convertToSliderValue, convertToSliderLabel } from './components/CreativitySlider';
 import type { CoverLetterPayload } from './types';
 import useAuth from '@wasp/auth/useAuth';
-import LeaveATip from './components/AlertDialog';
+import { LeaveATip, LoginToBegin } from './components/AlertDialog';
 
 function MainPage() {
   const [pdfText, setPdfText] = useState<string | null>(null);
@@ -47,7 +47,7 @@ function MainPage() {
   const [showTooltip, setShowTooltip] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
 
-  const { data: user } = useAuth();
+  const { data: user, isLoading: isUserLoading } = useAuth();
 
   const { data: job, isLoading: isJobLoading } = useQuery<{ id: string | null }, Job>(
     getJob,
@@ -65,6 +65,7 @@ function MainPage() {
   } = useForm();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: loginIsOpen, onOpen: loginOnOpen, onClose: loginOnClose } = useDisclosure();
 
   const history = useHistory();
   const loadingTextRef = useRef<HTMLDivElement>(null);
@@ -150,7 +151,15 @@ function MainPage() {
   }
 
   async function onSubmit(values: any): Promise<void> {
-    checkUsageNumbers();
+    const canUserContinue = checkUsageNumbers();
+    if (!user) {
+      window.open('/login', '_self');
+      return;
+    }
+    if (!canUserContinue) {
+      window.open('/profile', '_self');
+      return;
+    }
 
     try {
       const job = (await createJob(values)) as Job;
@@ -182,7 +191,15 @@ function MainPage() {
   }
 
   async function onUpdate(values: any): Promise<(Job & { coverLetter: CoverLetter[] }) | undefined> {
-    checkUsageNumbers();
+    const canUserContinue = checkUsageNumbers();
+    if (!user) {
+      window.open('/login', '_self');
+      return;
+    }
+    if (!canUserContinue) {
+      window.open('/profile', '_self');
+      return;
+    }
 
     try {
       if (!job) {
@@ -230,12 +247,19 @@ function MainPage() {
     }, 35000);
   }
 
-  async function checkUsageNumbers() {
-    if (user && userInfo) {
-      if (userInfo.letters.length > 2) {
+  function checkUsageNumbers(): Boolean {
+    if (!user?.hasPaid && userInfo) {
+      if (userInfo.letters.length >= 1 && userInfo.letters.length < 3) {
         onOpen();
       }
+      return userInfo.letters.length < 3;
     }
+    if (user?.hasPaid) {
+      return true;
+    } else if (!user?.hasPaid) {
+      return false;
+    }
+    return false;
   }
 
   const showForm = (isCoverLetterUpdate && job) || !isCoverLetterUpdate;
@@ -267,6 +291,12 @@ function MainPage() {
                       message: 'Minimum length should be 2',
                     },
                   })}
+                  onFocus={(e: any) => {
+                    if (user === null) {
+                      loginOnOpen();
+                      e.target.blur();
+                    }
+                  }}
                   disabled={isCoverLetterUpdate}
                 />
                 <FormErrorMessage>{formErrors.title && formErrors.title.message}</FormErrorMessage>
@@ -430,7 +460,14 @@ function MainPage() {
                 </FormControl>
               </VStack>
               <HStack alignItems='flex-end' gap={1}>
-                <Button colorScheme='purple' mt={3} size='sm' isLoading={isSubmitting} type='submit'>
+                <Button
+                  colorScheme='purple'
+                  mt={3}
+                  size='sm'
+                  isLoading={isSubmitting}
+                  disabled={user === null}
+                  type='submit'
+                >
                   {!isCoverLetterUpdate ? 'Generate Cover Letter' : 'Create New Cover Letter'}
                 </Button>
                 <Text ref={loadingTextRef} fontSize='sm' fontStyle='italic' color='text-contrast-md'>
@@ -441,7 +478,8 @@ function MainPage() {
           )}
         </form>
       </BorderBox>
-      <LeaveATip isOpen={isOpen} onOpen={onOpen} onClose={onClose} />
+      <LeaveATip isOpen={isOpen} onOpen={onOpen} onClose={onClose} amount={userInfo?.letters.length || 0} />
+      <LoginToBegin isOpen={loginIsOpen} onOpen={loginOnOpen} onClose={loginOnClose} />
     </>
   );
 }

@@ -53,7 +53,7 @@ export default function NavBar() {
             </NavButton>
             <Spacer maxW='3px' />
             <NavButton icon={<CgProfile />} to='/profile'>
-              Profile
+              Account
             </NavButton>
             <MobileButton icon={<AiOutlineMenu />} isUser={true}>
               Menu
@@ -132,7 +132,7 @@ function MobileButton({
               <MenuItem>Jobs Dashboard</MenuItem>
             </Link>
             <Link as={RouterLink} to={`/profile`}>
-              <MenuItem>Profile</MenuItem>
+              <MenuItem>Account</MenuItem>
             </Link>
           </>
         ) : (

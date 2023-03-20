@@ -31,6 +31,7 @@ app applyai {
     ("react-hook-form", "7.43.1"),
     ("pdfjs-dist", "3.3.122"),
     ("@types/pdfjs-dist", "2.10.378"),
+    ("stripe", "11.15.0")
   ],
 }
 
@@ -43,6 +44,8 @@ entity User {=psl
   username    String  @unique
   password    String
   email       String?
+  hasPaid     Boolean @default(false)
+  checkoutSessionId String?
   letters     CoverLetter[]
   jobs        Job[]
   externalAuthAssociations  SocialLogin[]
@@ -116,6 +119,12 @@ page ProfilePage {
   component: import Profile from "@client/ProfilePage"
 }
 
+route CheckoutRoute { path: "/checkout", to: CheckoutPage }
+page CheckoutPage {
+  authRequired: true,
+  component: import Checkout from "@client/CheckoutPage"
+}
+
 /* ⛑ These are the Wasp Operations, which allow the client and server to interact:
  * https://wasp-lang.dev/docs/language/features#queries-and-actions-aka-operations
  */
@@ -138,6 +147,16 @@ action updateJob {
 action updateCoverLetter {
   fn: import { updateCoverLetter } from "@server/actions.js",
   entities: [Job, CoverLetter]
+}
+
+action updateUser {
+  fn: import { updateUser } from "@server/actions.js",
+  entities: [User]
+}
+
+action stripePayment {
+  fn: import { stripePayment } from "@server/actions.js",
+  entities: [User]
 }
 
 query getJobs {
