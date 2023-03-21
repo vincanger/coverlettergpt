@@ -18,9 +18,13 @@ app applyai {
   db: {
     system: PostgreSQL
   },
+  server: {
+    setupFn: import serverSetup from "@server/serverSetup.js"
+  },
   client: {
     rootComponent: import App from "@client/App",
   },
+
   dependencies: [
     ("node-fetch", "3.3.0"),
     ("@chakra-ui/react", "1.8.8"),
@@ -31,7 +35,8 @@ app applyai {
     ("react-hook-form", "7.43.1"),
     ("pdfjs-dist", "3.3.122"),
     ("@types/pdfjs-dist", "2.10.378"),
-    ("stripe", "11.15.0")
+    ("stripe", "11.15.0"),
+    ("@sendgrid/mail", "7.7.0")
   ],
 }
 
@@ -45,6 +50,7 @@ entity User {=psl
   password    String
   email       String?
   hasPaid     Boolean @default(false)
+  datePaid    DateTime? 
   checkoutSessionId String?
   letters     CoverLetter[]
   jobs        Job[]
@@ -66,7 +72,7 @@ entity CoverLetter {=psl
   title      String
   content    String
   tokenUsage Int
-  job        Job        @relation(fields: [jobId], references: [id])
+  job        Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
   jobId      String
   user       User?      @relation(fields: [userId], references: [id])
   userId     Int?
@@ -80,7 +86,7 @@ entity Job {=psl
   company       String
   location      String
   description   String
-  coverLetter   CoverLetter[]
+  coverLetter   CoverLetter[] 
   user          User?          @relation(fields: [userId], references: [id])
   userId        Int?
   createdAt     DateTime       @default(now())
@@ -154,6 +160,11 @@ action updateUser {
   entities: [User]
 }
 
+action deleteJob {
+  fn: import { deleteJob } from "@server/actions.js",
+  entities: [Job]
+}
+
 action stripePayment {
   fn: import { stripePayment } from "@server/actions.js",
   entities: [User]
@@ -181,5 +192,31 @@ query getCoverLetters {
 
 query getUserInfo {
   fn: import { getUserInfo } from "@server/queries.js",
+  entities: [User]
+}
+
+/* 🕵️‍♂️ These are the Wasp Cron Jobs:
+ * https://wasp-lang.dev/docs/language/features#jobs
+ */
+
+job checkUserSubscription {
+  executor: PgBoss,
+  perform: {
+    fn: import { updateUserSubscription } from "@server/workers/updateUserSubscription.js"
+  },
+  schedule: {
+    cron: "0 23 * * *" 
+  },
+  entities: [User]
+}
+
+job emailSender {
+  executor: PgBoss,
+  perform: {
+    fn: import { sendGrid } from "@server/workers/sendGrid.js"
+  },
+  schedule: {
+    cron: "0 23 * * *" 
+  },
   entities: [User]
 }

@@ -1,30 +1,41 @@
 import BorderBox from './components/BorderBox';
-import { Heading, Text, Button, Code, Spinner } from '@chakra-ui/react';
+import { Heading, Text, Button, Spinner } from '@chakra-ui/react';
 import { User } from '@wasp/entities';
 import { useQuery } from '@wasp/queries';
 import getUserInfo from '@wasp/queries/getUserInfo';
 import updateUser from '@wasp/actions/updateUser';
 import { useState, useEffect } from 'react';
-import stripePayment from '@wasp/actions/stripePayment';
+import { useHistory } from 'react-router-dom';
 
 type UpdateUserResult = Pick<User, 'id' | 'email' | 'hasPaid'>;
 
 export default function CheckoutPage({ user }: { user: User }) {
-  const [coverLetterAmount, setCoverLetterAmount] = useState(0);
   const [hasPaid, setHasPaid] = useState('loading');
-  const [isLoading, setIsLoading] = useState(false);
 
-  const { data: userInfo } = useQuery<{ id: number | null }, UpdateUserResult & { letters: [] }>(getUserInfo, { id: user.id });
+  const { data: userInfo } = useQuery<{ id: number | null }, UpdateUserResult & { letters: [] }>(getUserInfo, {
+    id: user.id,
+  });
+
+  const history = useHistory();
 
   useEffect(() => {
-    if (userInfo?.letters.length) {
-      setCoverLetterAmount(3 - userInfo.letters.length);
+    if (user?.hasPaid) {
+      history.push('/profile');
+      return;
     }
-  }, [userInfo]);
-
-  useEffect(() => {
-    async function callUpdateUser(): Promise<User> {
-      return await updateUser();
+    function delayedRedirect() {
+      return setTimeout(() => {
+        history.push('/profile');
+      }, 4000);
+    }
+    async function callUpdateUser(): Promise<void> {
+      const updatedUser = await updateUser();
+      if (updatedUser?.hasPaid) {
+        setHasPaid('paid');
+      } else {
+        setHasPaid('error');
+        delayedRedirect();
+      }
     }
     const urlParams = new URLSearchParams(window.location.search);
     const cancel = urlParams.get('canceled');
@@ -32,46 +43,30 @@ export default function CheckoutPage({ user }: { user: User }) {
     if (cancel) {
       setHasPaid('canceled');
     } else if (success) {
-      setHasPaid('paid');
       callUpdateUser();
     } else {
-      setHasPaid('default')
+      history.push('/profile');
     }
-  }, []);
-
-  async function handleClick() {
-    setIsLoading(true);
-    const response = await stripePayment();
-    const url = response.sessionUrl;
-    window.open(url, '_blank');
-    setIsLoading(false);
-  }
+    delayedRedirect();
+    return () => {
+      clearTimeout(delayedRedirect());
+    };
+  }, [userInfo]);
 
   return (
     <BorderBox>
-      <Heading> {hasPaid === 'paid' ? '🥳 Payment Successful!' : hasPaid === 'canceled' && '😢 Payment Canceled'} </Heading>
-      {hasPaid === 'loading' && (
-        <Spinner/>
-      )}
-      {hasPaid === 'paid' ? (
-        <>
-        <Text textAlign='center'>Thanks so much for your support. <br/>You have lifetime, unlimited access to CoverLetterGPT!</Text>
-        <a href='/'><Button colorScheme='purple' size='sm'>Create a New Cover Letter</Button></a>
-        </>
-      ) : (
+      <Heading>
+        {hasPaid === 'paid'
+          ? '🥳 Payment Successful!'
+          : hasPaid === 'canceled'
+          ? '😢 Payment Canceled'
+          : hasPaid === 'error' && '🙄 Payment Error'}
+      </Heading>
+      {hasPaid === 'loading' && <Spinner />}
+      {hasPaid !== 'loading' && (
         <Text textAlign='center'>
-          You have <Code>{coverLetterAmount}</Code> cover letter{coverLetterAmount === 1 ? '' : 's'} left
+          You are being redirected to your profile page... <br />
         </Text>
-      )}
-      {hasPaid !== 'paid' && (
-        <>
-          <Text textAlign='center'>
-            Generate unlimited cover letters for life for just <Code>$4.95</Code> !
-          </Text>
-          <Button colorScheme='purple' mr={3} isLoading={isLoading} onClick={handleClick}>
-            💰 Buy Now!
-          </Button>
-        </>
       )}
     </BorderBox>
   );

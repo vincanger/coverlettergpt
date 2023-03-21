@@ -7,6 +7,7 @@ import type {
   UpdateCoverLetter,
   UpdateJob,
   UpdateUser,
+  DeleteJob,
   StripePayment,
 } from '@wasp/actions/types';
 import Stripe from 'stripe';
@@ -209,20 +210,47 @@ export const updateCoverLetter: UpdateCoverLetter<UpdateCoverLetterPayload, Job 
   });
 };
 
+export const deleteJob: DeleteJob<{ jobId: string }, { count: number }> = ({ jobId }, context) => {
+  if (!context.user) {
+    throw new HttpError(401);
+  }
+  if (!jobId) {
+    throw new HttpError(401);
+  }
+
+  return context.entities.Job.deleteMany({
+    where: {
+      id: jobId,
+      userId: context.user.id,
+    },
+  });
+};
+
 type UpdateUserPayload = Pick<User, 'email'>;
 type UpdateUserResult = Pick<User, 'id' | 'email' | 'hasPaid'>;
 
-export const updateUser: UpdateUser<UpdateUserPayload, UpdateUserResult> = async ({ email }, context) => {
+function dontUpdateUser(context: any): Promise<User> {
+  return new Promise((resolve) => {
+    resolve(context.user);
+  });
+}
+// todo rename to addUserHasPaid
+export const updateUser: UpdateUser<UpdateUserPayload, UpdateUserResult | User> = async ({ email }, context) => {
   if (!context.user) {
     throw new HttpError(401);
   }
 
+  if (context.user.hasPaid) {
+    return dontUpdateUser(context);
+  }
   const { checkoutSessionId } = context.user;
 
-  let status: Stripe.Checkout.Session.Status | null = null;
+  let status: Stripe.Checkout.Session.PaymentStatus | null = null;
   if (checkoutSessionId) {
     const session: Stripe.Checkout.Session = await stripe.checkout.sessions.retrieve(checkoutSessionId);
-    status = session?.status;
+    status = session.payment_status;
+  } else {
+    return dontUpdateUser(context);
   }
 
   return context.entities.User.update({
@@ -231,7 +259,9 @@ export const updateUser: UpdateUser<UpdateUserPayload, UpdateUserResult> = async
     },
     data: {
       email: email ? email : undefined,
-      hasPaid: status === 'complete' ? true : false,
+      hasPaid: status === 'paid' ? true : false,
+      checkoutSessionId: null,
+      datePaid: status === 'paid' ? new Date() : undefined,
     },
     select: {
       id: true,
@@ -273,6 +303,7 @@ export const stripePayment: StripePayment<string, StripePaymentResult> = async (
   const session: Stripe.Checkout.Session = await stripe.checkout.sessions.create({
     line_items: [
       {
+        // price: process.env.PRODUCT_TEST_PRICE_ID!, // change back to PRODUCT_PRICE_ID and KEY also
         price: process.env.PRODUCT_PRICE_ID!,
         quantity: 1,
       },

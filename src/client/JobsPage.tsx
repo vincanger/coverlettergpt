@@ -26,6 +26,8 @@ import ModalElement from './components/Modal';
 import DescriptionModal from './components/DescriptionModal';
 import BorderBox from './components/BorderBox';
 import { useHistory } from 'react-router-dom';
+import { DeleteJob } from './components/AlertDialog';
+import { FiDelete } from 'react-icons/fi';
 
 function JobsPage() {
   const [JobId, setJobId] = useState<string | null>(null);
@@ -53,6 +55,7 @@ function JobsPage() {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: desIsOpen, onOpen: desOnOpen, onClose: desOnClose } = useDisclosure();
+  const { isOpen: deleteIsOpen, onOpen: deleteOnOpen, onClose: deleteOnClose } = useDisclosure();
 
   const coverLetterHandler = (job: Job) => {
     if (job) {
@@ -86,8 +89,10 @@ function JobsPage() {
       <BorderBox>
         <Heading size='md'>Your Jobs</Heading>
         {isLoading && <Spinner />}
-        {!!jobs && (<Accordion width='100%'>
-          {jobs.length > 0 ? jobs.map((job: Job) => (
+        {!!jobs && (
+          <Accordion width='100%'>
+            {jobs.length > 0 ? (
+              jobs.map((job: Job) => (
                 <AccordionItem key={job.id}>
                   <h2>
                     <HStack flex='1' justifyContent='space-between'>
@@ -105,8 +110,22 @@ function JobsPage() {
                     </HStack>
                   </h2>
                   <AccordionPanel pb={4} pt={2}>
-                    <Divider maxW='40%' variant='dashed' />
-                    <VStack alignItems={'stretch'} my={1}>
+                    <HStack justify='space-between' align='center'>
+                      <Divider maxW='40%' variant='dashed' />
+                      <Button
+                        leftIcon={<FiDelete />}
+                        mr={3}
+                        size='xs'
+                        fontSize='sm'
+                        onClick={() => {
+                          setJobId(job.id);
+                          deleteOnOpen();
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </HStack>
+                    <VStack alignItems={'space-between'} my={1}>
                       <Text>
                         <b>Location:</b> {job.location}
                       </Text>
@@ -129,7 +148,7 @@ function JobsPage() {
                         <Button onClick={() => coverLetterHandler(job)} size='sm'>
                           Display Cover Letter(s)
                         </Button>
-                        <Button onClick={() => updateCoverLetterHandler(job.id)} size='sm'>
+                        <Button colorScheme='purple' onClick={() => updateCoverLetterHandler(job.id)} size='sm'>
                           Create Additional Cover Letter
                         </Button>
                       </HStack>
@@ -137,8 +156,11 @@ function JobsPage() {
                   </AccordionPanel>
                 </AccordionItem>
               ))
-            : <Text textAlign='center'>no jobs yet...</Text>}
-        </Accordion>)}
+            ) : (
+              <Text textAlign='center'>no jobs yet...</Text>
+            )}
+          </Accordion>
+        )}
       </BorderBox>
       <Button size='sm' colorScheme='purple' alignSelf='flex-end' onClick={() => history.push('/')}>
         Create New Job
@@ -149,6 +171,7 @@ function JobsPage() {
       {descriptionText && (
         <DescriptionModal description={descriptionText} isOpen={desIsOpen} onOpen={desOnOpen} onClose={desOnClose} />
       )}
+      {JobId && <DeleteJob jobId={JobId} isOpen={deleteIsOpen} onOpen={deleteOnOpen} onClose={deleteOnClose} />}
     </VStack>
   );
 }
