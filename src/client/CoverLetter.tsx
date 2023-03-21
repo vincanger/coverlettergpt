@@ -1,9 +1,10 @@
-import { Tooltip, Button, Textarea, useClipboard, Spinner } from '@chakra-ui/react';
+import { Tooltip, Button, Textarea, useClipboard, Spinner, HStack } from '@chakra-ui/react';
 import { match } from 'react-router-dom';
 import { useQuery } from '@wasp/queries';
 import getCoverLetter from '@wasp/queries/getCoverLetter';
 import { CoverLetter } from '@wasp/entities';
 import BorderBox from './components/BorderBox';
+import { useHistory } from 'react-router-dom';
 
 export function CoverLetter({ match }: { match: match<{ id: string }> }) {
   const id = match.params.id as string;
@@ -13,6 +14,8 @@ export function CoverLetter({ match }: { match: match<{ id: string }> }) {
     { enabled: !!id }
   );
   const { hasCopied, onCopy } = useClipboard(coverLetter?.content || '');
+
+  const history = useHistory();
 
   return (
     <>
@@ -34,16 +37,21 @@ export function CoverLetter({ match }: { match: match<{ id: string }> }) {
         )}
 
         {coverLetter && (
-          <Tooltip
-            label={hasCopied ? 'Copied!' : 'Copy Letter to Clipboard'}
-            placement='top'
-            hasArrow
-            closeOnClick={false}
-          >
-            <Button colorScheme='purple' size='sm' mr={3} onClick={onCopy}>
-              Copy
+          <HStack>
+            <Button size='sm' mr={3} onClick={() => history.push('/jobs')}>
+              Manage Cover Letters
             </Button>
-          </Tooltip>
+            <Tooltip
+              label={hasCopied ? 'Copied!' : 'Copy Letter to Clipboard'}
+              placement='top'
+              hasArrow
+              closeOnClick={false}
+            >
+              <Button colorScheme='purple' size='sm' mr={3} onClick={onCopy}>
+                Copy
+              </Button>
+            </Tooltip>
+          </HStack>
         )}
       </BorderBox>
     </>

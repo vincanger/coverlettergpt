@@ -86,60 +86,59 @@ function JobsPage() {
       <BorderBox>
         <Heading size='md'>Your Jobs</Heading>
         {isLoading && <Spinner />}
-        <Accordion width='100%'>
-          {jobs &&
-            !isLoading &&
-            jobs.map((job: Job) => (
-              <AccordionItem key={job.id}>
-                <h2>
-                  <HStack flex='1' justifyContent='space-between'>
-                    <AccordionButton _focus={{ boxShadow: '0px -1px 0px 0px var(--chakra-colors-active)' }}>
-                      <Text textDecoration={job.isCompleted ? 'line-through' : ''}>
-                        <b>{job.title}</b> @ {job.company}
-                      </Text>
-                      <Spacer />
-                      <Text fontSize='sm' color={!job.isCompleted ? 'text-contrast-xs' : 'text-contrast-lg'}>
-                        Applied
-                      </Text>
-                      <Checkbox mx={1} isChecked={job.isCompleted} onChange={(e) => checkboxHandler(e, job)} />
-                      <AccordionIcon />
-                    </AccordionButton>
-                  </HStack>
-                </h2>
-                <AccordionPanel pb={4} pt={2}>
-                  <Divider maxW='40%' variant='dashed' />
-                  <VStack alignItems={'stretch'} my={1}>
-                    <Text>
-                      <b>Location:</b> {job.location}
-                    </Text>
-                    <HStack pb={1}>
+        {!!jobs && (<Accordion width='100%'>
+          {jobs.length > 0 ? jobs.map((job: Job) => (
+                <AccordionItem key={job.id}>
+                  <h2>
+                    <HStack flex='1' justifyContent='space-between'>
+                      <AccordionButton _focus={{ boxShadow: '0px -1px 0px 0px var(--chakra-colors-active)' }}>
+                        <Text textDecoration={job.isCompleted ? 'line-through' : ''}>
+                          <b>{job.title}</b> @ {job.company}
+                        </Text>
+                        <Spacer />
+                        <Text fontSize='sm' color={!job.isCompleted ? 'text-contrast-xs' : 'text-contrast-lg'}>
+                          Applied
+                        </Text>
+                        <Checkbox mx={1} isChecked={job.isCompleted} onChange={(e) => checkboxHandler(e, job)} />
+                        <AccordionIcon />
+                      </AccordionButton>
+                    </HStack>
+                  </h2>
+                  <AccordionPanel pb={4} pt={2}>
+                    <Divider maxW='40%' variant='dashed' />
+                    <VStack alignItems={'stretch'} my={1}>
                       <Text>
-                        <b>Description:</b>
+                        <b>Location:</b> {job.location}
                       </Text>
-                      <Button
-                        size='xs'
-                        fontSize='sm'
-                        onClick={() => {
-                          setDescriptionText(job.description);
-                          desOnOpen();
-                        }}
-                      >
-                        Display
-                      </Button>
-                    </HStack>
-                    <HStack py={1} justify='space-between'>
-                      <Button onClick={() => coverLetterHandler(job)} size='sm'>
-                        Display Cover Letter(s)
-                      </Button>
-                      <Button onClick={() => updateCoverLetterHandler(job.id)} size='sm'>
-                        Create Additional Cover Letter
-                      </Button>
-                    </HStack>
-                  </VStack>
-                </AccordionPanel>
-              </AccordionItem>
-            ))}
-        </Accordion>
+                      <HStack pb={1}>
+                        <Text>
+                          <b>Description:</b>
+                        </Text>
+                        <Button
+                          size='xs'
+                          fontSize='sm'
+                          onClick={() => {
+                            setDescriptionText(job.description);
+                            desOnOpen();
+                          }}
+                        >
+                          Display
+                        </Button>
+                      </HStack>
+                      <HStack py={1} justify='space-between'>
+                        <Button onClick={() => coverLetterHandler(job)} size='sm'>
+                          Display Cover Letter(s)
+                        </Button>
+                        <Button onClick={() => updateCoverLetterHandler(job.id)} size='sm'>
+                          Create Additional Cover Letter
+                        </Button>
+                      </HStack>
+                    </VStack>
+                  </AccordionPanel>
+                </AccordionItem>
+              ))
+            : <Text textAlign='center'>no jobs yet...</Text>}
+        </Accordion>)}
       </BorderBox>
       <Button size='sm' colorScheme='purple' alignSelf='flex-end' onClick={() => history.push('/')}>
         Create New Job

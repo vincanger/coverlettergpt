@@ -6,7 +6,7 @@ export function CallToAction() {
     <VStack width={['sm', 'lg', 'xl']} mt={10} textAlign='center' gap={4}>
       <Divider />
       <HStack>
-        <Text color='text-contrast-sm' fontSize='sm'>
+        <Text color='text-contrast-sm' fontSize='sm' textAlign='start'>
           This Project is Open-Source! Check Out the Code on
         </Text>
         <Link

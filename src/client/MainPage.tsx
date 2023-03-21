@@ -45,7 +45,6 @@ function MainPage() {
   const [isCompleteCoverLetter, setIsCompleteCoverLetter] = useState<boolean>(true);
   const [sliderValue, setSliderValue] = useState(30);
   const [showTooltip, setShowTooltip] = useState(false);
-  const [userId, setUserId] = useState<number | null>(null);
 
   const { data: user, isLoading: isUserLoading } = useAuth();
 
@@ -55,7 +54,7 @@ function MainPage() {
     { enabled: !!jobToFetch }
   );
 
-  const { data: userInfo } = useQuery<{ id: number | null }, User & { letters: [] }>(getUserInfo, { id: userId });
+  const { data: userInfo } = useQuery<unknown, User & { letters: [] }>(getUserInfo);
 
   const {
     handleSubmit,
@@ -144,6 +143,9 @@ function MainPage() {
           textBuilder += text;
         }
         setPdfText(textBuilder);
+      }).catch((err) => {
+        alert('An Error occured. Please try again.')
+        console.error(err);
       });
     };
     // Read the file as ArrayBuffer
@@ -153,11 +155,11 @@ function MainPage() {
   async function onSubmit(values: any): Promise<void> {
     const canUserContinue = checkUsageNumbers();
     if (!user) {
-      window.open('/login', '_self');
+      history.push('/login');
       return;
     }
     if (!canUserContinue) {
-      window.open('/profile', '_self');
+      history.push('/profile');
       return;
     }
 
@@ -193,11 +195,11 @@ function MainPage() {
   async function onUpdate(values: any): Promise<(Job & { coverLetter: CoverLetter[] }) | undefined> {
     const canUserContinue = checkUsageNumbers();
     if (!user) {
-      window.open('/login', '_self');
+      history.push('/login');
       return;
     }
     if (!canUserContinue) {
-      window.open('/profile', '_self');
+      history.push('/profile');
       return;
     }
 
