@@ -73,7 +73,7 @@ export const getJob: GetJob<Job> = async ({ id }, context) => {
   });
 };
 
-export const getUserInfo: GetUserInfo<User & { letters: CoverLetter[] }> = async (_args, context) => {
+export const getUserInfo: GetUserInfo<Pick<User, 'id' | 'email' | 'hasPaid' | 'notifyPaymentExpires'> & { letters: CoverLetter[] }> = async (_args, context) => {
   if (!context.user) {
     throw new HttpError(401);
   }
@@ -85,8 +85,9 @@ export const getUserInfo: GetUserInfo<User & { letters: CoverLetter[] }> = async
     select: {
       letters: true,
       id: true,
-      username: true,
       email: true,
+      hasPaid: true,
+      notifyPaymentExpires: true,
     },
   });
 };

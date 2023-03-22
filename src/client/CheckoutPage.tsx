@@ -1,9 +1,9 @@
 import BorderBox from './components/BorderBox';
-import { Heading, Text, Button, Spinner } from '@chakra-ui/react';
+import { Heading, Text, Spinner } from '@chakra-ui/react';
 import { User } from '@wasp/entities';
 import { useQuery } from '@wasp/queries';
 import getUserInfo from '@wasp/queries/getUserInfo';
-import updateUser from '@wasp/actions/updateUser';
+import updateUserHasPaid from '@wasp/actions/updateUserHasPaid';
 import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 
@@ -29,7 +29,7 @@ export default function CheckoutPage({ user }: { user: User }) {
       }, 4000);
     }
     async function callUpdateUser(): Promise<void> {
-      const updatedUser = await updateUser();
+      const updatedUser = await updateUserHasPaid() as UpdateUserResult;
       if (updatedUser?.hasPaid) {
         setHasPaid('paid');
       } else {

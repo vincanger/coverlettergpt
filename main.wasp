@@ -18,9 +18,9 @@ app applyai {
   db: {
     system: PostgreSQL
   },
-  server: {
-    setupFn: import serverSetup from "@server/serverSetup.js"
-  },
+  // server: {
+  //   setupFn: import serverSetup from "@server/serverSetup.js"
+  // },
   client: {
     rootComponent: import App from "@client/App",
   },
@@ -50,8 +50,10 @@ entity User {=psl
   password    String
   email       String?
   hasPaid     Boolean @default(false)
-  datePaid    DateTime? 
+  datePaid    DateTime?
+  stripeId    String? 
   checkoutSessionId String?
+  notifyPaymentExpires Boolean @default(false)
   letters     CoverLetter[]
   jobs        Job[]
   externalAuthAssociations  SocialLogin[]
@@ -160,6 +162,11 @@ action updateUser {
   entities: [User]
 }
 
+action updateUserHasPaid {
+  fn: import { updateUserHasPaid } from "@server/actions.js",
+  entities: [User]
+}
+
 action deleteJob {
   fn: import { deleteJob } from "@server/actions.js",
   entities: [Job]
@@ -195,7 +202,7 @@ query getUserInfo {
   entities: [User]
 }
 
-/* 🕵️‍♂️ These are the Wasp Cron Jobs:
+/* 🕵️‍♂️ These are the Wasp Cron Jobs. Use them to set up recurring tasks:
  * https://wasp-lang.dev/docs/language/features#jobs
  */
 
@@ -210,13 +217,21 @@ job checkUserSubscription {
   entities: [User]
 }
 
+job checkExpirationDate {
+  executor: PgBoss,
+  perform: {
+    fn: import { sendExpirationNotice } from "@server/workers/sendExpirationNotice.js"
+  },
+  schedule: {
+    cron: "0 17 * * *" 
+  },
+  entities: [User]
+}
+
 job emailSender {
   executor: PgBoss,
   perform: {
     fn: import { sendGrid } from "@server/workers/sendGrid.js"
-  },
-  schedule: {
-    cron: "0 23 * * *" 
   },
   entities: [User]
 }

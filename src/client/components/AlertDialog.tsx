@@ -54,7 +54,7 @@ export function LeaveATip({
             <AlertDialogBody>
               You have <Code>{coverLettersLeft}</Code> cover letter
               {coverLettersLeft === 1 ? '' : 's'} left
-              <br /> Get Lifetime Access for only <Code>$4.95</Code> !
+              <br /> Get unlimited access for 3 months for only <Code>$4.95</Code> !
             </AlertDialogBody>
 
             <AlertDialogFooter>

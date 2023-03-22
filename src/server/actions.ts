@@ -7,12 +7,13 @@ import type {
   UpdateCoverLetter,
   UpdateJob,
   UpdateUser,
+  UpdateUserHasPaid,
   DeleteJob,
   StripePayment,
 } from '@wasp/actions/types';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_KEY!, {
+const stripe = new Stripe(process.env.STRIPE_TEST_KEY!, {
   apiVersion: '2022-11-15',
 });
 
@@ -40,6 +41,27 @@ type CoverLetterPayload = Pick<CoverLetter, 'title' | 'jobId'> & {
   isCompleteCoverLetter: boolean;
   includeWittyRemark: boolean;
   temperature: number;
+};
+
+type OpenAIResponse = {
+  id: string;
+  object: string;
+  created: number;
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+  choices: [
+    {
+      index: number;
+      message: {
+        role: string;
+        content: string;
+      };
+      finish_reason: string;
+    }
+  ];
 };
 
 export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverLetter> = async (
@@ -84,27 +106,6 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
     method: 'POST',
     body: JSON.stringify(payload),
   });
-
-  type OpenAIResponse = {
-    id: string;
-    object: string;
-    created: number;
-    usage: {
-      prompt_tokens: number;
-      completion_tokens: number;
-      total_tokens: number;
-    };
-    choices: [
-      {
-        index: number;
-        message: {
-          role: string;
-          content: string;
-        };
-        finish_reason: string;
-      }
-    ];
-  };
 
   const json = (await response.json()) as OpenAIResponse;
 
@@ -163,8 +164,9 @@ export const updateJob: UpdateJob<UpdateJobPayload, Job> = (
 
 export type UpdateCoverLetterPayload = Pick<Job, 'id' | 'description'> &
   Pick<CoverLetter, 'content'> & { isCompleteCoverLetter: boolean; includeWittyRemark: boolean; temperature: number };
+type JobWithCoverLetter = Job & { coverLetter: CoverLetter[] };
 
-export const updateCoverLetter: UpdateCoverLetter<UpdateCoverLetterPayload, Job | CoverLetter> = async (
+export const updateCoverLetter: UpdateCoverLetter<UpdateCoverLetterPayload, JobWithCoverLetter> = async (
   { id, description, content, isCompleteCoverLetter, includeWittyRemark, temperature },
   context
 ) => {
@@ -180,7 +182,7 @@ export const updateCoverLetter: UpdateCoverLetter<UpdateCoverLetterPayload, Job 
   });
 
   if (!job) {
-    throw new HttpError(404);
+    throw new HttpError(404, 'Job not found');
   }
 
   const coverLetter = await generateCoverLetter(
@@ -226,31 +228,12 @@ export const deleteJob: DeleteJob<{ jobId: string }, { count: number }> = ({ job
   });
 };
 
-type UpdateUserPayload = Pick<User, 'email'>;
-type UpdateUserResult = Pick<User, 'id' | 'email' | 'hasPaid'>;
+type UpdateUserArgs = Pick<User, 'notifyPaymentExpires'>
+type UserWithoutPassword = Omit<User, 'password'>;
 
-function dontUpdateUser(context: any): Promise<User> {
-  return new Promise((resolve) => {
-    resolve(context.user);
-  });
-}
-// todo rename to addUserHasPaid
-export const updateUser: UpdateUser<UpdateUserPayload, UpdateUserResult | User> = async ({ email }, context) => {
+export const updateUser: UpdateUser<UpdateUserArgs, UserWithoutPassword> = async ( { notifyPaymentExpires }, context) => {
   if (!context.user) {
     throw new HttpError(401);
-  }
-
-  if (context.user.hasPaid) {
-    return dontUpdateUser(context);
-  }
-  const { checkoutSessionId } = context.user;
-
-  let status: Stripe.Checkout.Session.PaymentStatus | null = null;
-  if (checkoutSessionId) {
-    const session: Stripe.Checkout.Session = await stripe.checkout.sessions.retrieve(checkoutSessionId);
-    status = session.payment_status;
-  } else {
-    return dontUpdateUser(context);
   }
 
   return context.entities.User.update({
@@ -258,7 +241,39 @@ export const updateUser: UpdateUser<UpdateUserPayload, UpdateUserResult | User> 
       id: context.user.id,
     },
     data: {
-      email: email ? email : undefined,
+      notifyPaymentExpires,
+    },
+  });
+};
+
+type UpdateUserResult = Pick<User, 'id' | 'email' | 'hasPaid'>;
+
+function dontUpdateUser(user: UserWithoutPassword): Promise<UserWithoutPassword> {
+  return new Promise((resolve) => {
+    resolve(user);
+  });
+}
+
+export const updateUserHasPaid: UpdateUserHasPaid<unknown, UpdateUserResult | UserWithoutPassword> = async (_args, context) => {
+  if (!context.user) {
+    throw new HttpError(401);
+  }
+  if (context.user.hasPaid) {
+    return dontUpdateUser(context.user as UserWithoutPassword);
+  }
+  const { checkoutSessionId } = context.user;
+  let status: Stripe.Checkout.Session.PaymentStatus;
+  if (!checkoutSessionId) {
+    return dontUpdateUser(context.user as UserWithoutPassword);
+  } else {
+    const session: Stripe.Checkout.Session = await stripe.checkout.sessions.retrieve(checkoutSessionId);
+    status = session.payment_status;
+  }
+  return context.entities.User.update({
+    where: {
+      id: context.user.id,
+    },
+    data: {
       hasPaid: status === 'paid' ? true : false,
       checkoutSessionId: null,
       datePaid: status === 'paid' ? new Date() : undefined,
@@ -276,35 +291,29 @@ type StripePaymentResult = {
   sessionId: string;
 };
 
-export const stripePayment: StripePayment<string, StripePaymentResult> = async (email, context) => {
-  if (!context.user) {
-    throw new HttpError(401);
+export const stripePayment: StripePayment<string, StripePaymentResult> = async (_args, context) => {
+  if (!context.user || !context.user.email) {
+    throw new HttpError(401, 'User or email not found');
   }
-
   let customer: Stripe.Customer;
-
-  if (email) {
-    const stripeCustomer = await stripe.customers.list({
-      email,
+  const stripeCustomers = await stripe.customers.list({
+    email: context.user.email,
+  });
+  if (!stripeCustomers.data.length) {
+    console.log('creating customer')
+    customer = await stripe.customers.create({
+      email: context.user.email,
     });
-
-    if (!stripeCustomer.data.length) {
-      customer = await stripe.customers.create({
-        email,
-      });
-    } else {
-      customer = stripeCustomer.data[0];
-    }
   } else {
-    console.error('User does not have an email in their profile');
-    throw new HttpError(400);
+    console.log('using existing customer')
+    customer = stripeCustomers.data[0];
   }
 
   const session: Stripe.Checkout.Session = await stripe.checkout.sessions.create({
     line_items: [
       {
-        // price: process.env.PRODUCT_TEST_PRICE_ID!, // change back to PRODUCT_PRICE_ID and KEY also
-        price: process.env.PRODUCT_PRICE_ID!,
+        price: process.env.PRODUCT_TEST_PRICE_ID!, // change back to PRODUCT_PRICE_ID and KEY also
+        // price: process.env.PRODUCT_PRICE_ID!,
         quantity: 1,
       },
     ],
@@ -318,20 +327,19 @@ export const stripePayment: StripePayment<string, StripePaymentResult> = async (
     customer: customer.id,
   });
 
-  if (session?.id) {
-    await context.entities.User.update({
-      where: {
-        id: context.user.id,
-      },
-      data: {
-        checkoutSessionId: session.id,
-      },
-    });
-  }
+  await context.entities.User.update({
+    where: {
+      id: context.user.id,
+    },
+    data: {
+      checkoutSessionId: session?.id ?? null,
+      stripeId: customer.id ?? null,
+    },
+  });
 
   return new Promise((resolve, reject) => {
     if (!session) {
-      reject(new Error('Could not create a Stripe session'));
+      reject(new HttpError(402, 'Could not create a Stripe session'));
     } else {
       resolve({
         sessionUrl: session.url,
