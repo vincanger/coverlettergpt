@@ -10,10 +10,11 @@ import type {
   UpdateUserHasPaid,
   DeleteJob,
   StripePayment,
+  StripeCreditsPayment,
 } from '@wasp/actions/types';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_TEST_KEY!, {
+const stripe = new Stripe(process.env.STRIPE_KEY!, {
   apiVersion: '2022-11-15',
 });
 
@@ -98,25 +99,58 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
     temperature,
   };
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY!}`,
-    },
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
+  let json: OpenAIResponse;
 
-  const json = (await response.json()) as OpenAIResponse;
+  try {
+    if (!context.user.hasPaid && !context.user.credits) {
+      throw new HttpError(402, 'User has not paid or is out of credits');
+    } else if (context.user.credits) {
+      await context.entities.User.update({
+        where: { id: context.user.id },
+        data: {
+          credits: {
+            decrement: 1,
+          },
+        },
+      });
+    }
 
-  return context.entities.CoverLetter.create({
-    data: {
-      title,
-      content: json.choices[0].message.content,
-      tokenUsage: json.usage.completion_tokens,
-      user: { connect: { id: context.user.id } },
-      job: { connect: { id: jobId } },
-    },
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY!}`,
+      },
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+
+    json = (await response.json()) as OpenAIResponse;
+
+    return context.entities.CoverLetter.create({
+      data: {
+        title,
+        content: json?.choices[0].message.content,
+        tokenUsage: json?.usage.completion_tokens,
+        user: { connect: { id: context.user.id } },
+        job: { connect: { id: jobId } },
+      },
+    });
+  } catch (error) {
+    if (!context.user.hasPaid) {
+      await context.entities.User.update({
+        where: { id: context.user.id },
+        data: {
+          credits: {
+            increment: 1,
+          },
+        },
+      });
+    }
+    console.error(error);
+  }
+
+  return new Promise((resolve, reject) => {
+    reject(new HttpError(500, 'Something went wrong'));
   });
 };
 
@@ -228,10 +262,13 @@ export const deleteJob: DeleteJob<{ jobId: string }, { count: number }> = ({ job
   });
 };
 
-type UpdateUserArgs = Pick<User, 'notifyPaymentExpires'>
+type UpdateUserArgs = Pick<User, 'notifyPaymentExpires'>;
 type UserWithoutPassword = Omit<User, 'password'>;
 
-export const updateUser: UpdateUser<UpdateUserArgs, UserWithoutPassword> = async ( { notifyPaymentExpires }, context) => {
+export const updateUser: UpdateUser<UpdateUserArgs, UserWithoutPassword> = async (
+  { notifyPaymentExpires },
+  context
+) => {
   if (!context.user) {
     throw new HttpError(401);
   }
@@ -242,6 +279,17 @@ export const updateUser: UpdateUser<UpdateUserArgs, UserWithoutPassword> = async
     },
     data: {
       notifyPaymentExpires,
+    },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      hasPaid: true,
+      datePaid: true,
+      notifyPaymentExpires: true,
+      checkoutSessionId: true,
+      stripeId: true,
+      credits: true,
     },
   });
 };
@@ -254,14 +302,17 @@ function dontUpdateUser(user: UserWithoutPassword): Promise<UserWithoutPassword>
   });
 }
 
-export const updateUserHasPaid: UpdateUserHasPaid<unknown, UpdateUserResult | UserWithoutPassword> = async (_args, context) => {
+export const updateUserHasPaid: UpdateUserHasPaid<unknown, UpdateUserResult | UserWithoutPassword> = async (
+  _args,
+  context
+) => {
   if (!context.user) {
     throw new HttpError(401);
   }
   if (context.user.hasPaid) {
     return dontUpdateUser(context.user as UserWithoutPassword);
   }
-  const { checkoutSessionId } = context.user;
+  const checkoutSessionId = context.user?.checkoutSessionId;
   let status: Stripe.Checkout.Session.PaymentStatus;
   if (!checkoutSessionId) {
     return dontUpdateUser(context.user as UserWithoutPassword);
@@ -300,20 +351,20 @@ export const stripePayment: StripePayment<string, StripePaymentResult> = async (
     email: context.user.email,
   });
   if (!stripeCustomers.data.length) {
-    console.log('creating customer')
+    console.log('creating customer');
     customer = await stripe.customers.create({
       email: context.user.email,
     });
   } else {
-    console.log('using existing customer')
+    console.log('using existing customer');
     customer = stripeCustomers.data[0];
   }
 
   const session: Stripe.Checkout.Session = await stripe.checkout.sessions.create({
     line_items: [
       {
-        price: process.env.PRODUCT_TEST_PRICE_ID!, // change back to PRODUCT_PRICE_ID and KEY also
-        // price: process.env.PRODUCT_PRICE_ID!,
+        // price: process.env.PRODUCT_TEST_PRICE_ID!, // change back to PRODUCT_PRICE_ID and KEY also
+        price: process.env.PRODUCT_PRICE_ID!,
         quantity: 1,
       },
     ],
@@ -333,6 +384,63 @@ export const stripePayment: StripePayment<string, StripePaymentResult> = async (
     },
     data: {
       checkoutSessionId: session?.id ?? null,
+      stripeId: customer.id ?? null,
+    },
+  });
+
+  return new Promise((resolve, reject) => {
+    if (!session) {
+      reject(new HttpError(402, 'Could not create a Stripe session'));
+    } else {
+      resolve({
+        sessionUrl: session.url,
+        sessionId: session.id,
+      });
+    }
+  });
+};
+
+export const stripeCreditsPayment: StripeCreditsPayment<string, StripePaymentResult> = async (_args, context) => {
+  if (!context.user || !context.user.email) {
+    throw new HttpError(401, 'User or email not found');
+  }
+  let customer: Stripe.Customer;
+  const stripeCustomers = await stripe.customers.list({
+    email: context.user.email,
+  });
+  if (!stripeCustomers.data.length) {
+    console.log('creating customer');
+    customer = await stripe.customers.create({
+      email: context.user.email,
+    });
+  } else {
+    console.log('using existing customer');
+    customer = stripeCustomers.data[0];
+  }
+
+  const session: Stripe.Checkout.Session = await stripe.checkout.sessions.create({
+    line_items: [
+      {
+        // price: PRODUCT_TEST_CREDIT_PRICE_ID, 
+        price: process.env.PRODUCT_CREDITS_PRICE_ID!,
+        quantity: 1,
+      },
+    ],
+    mode: 'payment',
+    success_url: `${DOMAIN}/checkout?credits=true`,
+    cancel_url: `${DOMAIN}/checkout?canceled=true`,
+    automatic_tax: { enabled: true },
+    customer_update: {
+      address: 'auto',
+    },
+    customer: customer.id,
+  });
+
+  await context.entities.User.update({
+    where: {
+      id: context.user.id,
+    },
+    data: {
       stripeId: customer.id ?? null,
     },
   });

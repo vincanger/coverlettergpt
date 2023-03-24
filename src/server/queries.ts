@@ -1,9 +1,6 @@
-import { GetCoverLetter, GetJobs, GetJob, GetUserInfo } from '@wasp/queries/types';
+import { GetCoverLetter, GetJobs, GetJob, GetUserInfo, GetCoverLetterCount } from '@wasp/queries/types';
 import { CoverLetter, Job, User } from '@wasp/entities';
 import HttpError from '@wasp/core/HttpError.js';
-import { Prisma, PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
 
 export const getCoverLetter: GetCoverLetter<CoverLetter> = async ({ id }, context) => {
   if (!context.user) {
@@ -73,7 +70,7 @@ export const getJob: GetJob<Job> = async ({ id }, context) => {
   });
 };
 
-export const getUserInfo: GetUserInfo<Pick<User, 'id' | 'email' | 'hasPaid' | 'notifyPaymentExpires'> & { letters: CoverLetter[] }> = async (_args, context) => {
+export const getUserInfo: GetUserInfo<Pick<User, 'id' | 'email' | 'hasPaid' | 'notifyPaymentExpires' | 'credits'> & { letters: CoverLetter[] }> = async (_args, context) => {
   if (!context.user) {
     throw new HttpError(401);
   }
@@ -88,6 +85,15 @@ export const getUserInfo: GetUserInfo<Pick<User, 'id' | 'email' | 'hasPaid' | 'n
       email: true,
       hasPaid: true,
       notifyPaymentExpires: true,
+      credits: true,
     },
   });
 };
+
+export const getCoverLetterCount: GetCoverLetterCount<number> = async (_args, context) => {
+  if (!context.user) {
+    throw new HttpError(401);
+  }
+
+  return context.entities.CoverLetter.count();
+}

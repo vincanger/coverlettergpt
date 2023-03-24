@@ -40,6 +40,7 @@ export default function CheckoutPage({ user }: { user: User }) {
     const urlParams = new URLSearchParams(window.location.search);
     const cancel = urlParams.get('canceled');
     const success = urlParams.get('success');
+    const credits = urlParams.get('credits');
     if (cancel) {
       setHasPaid('canceled');
     } else if (success) {

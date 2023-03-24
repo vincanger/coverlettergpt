@@ -11,7 +11,7 @@ import {
   Spacer,
 } from '@chakra-ui/react';
 import { useRef } from 'react';
-import stripePayment from '@wasp/actions/stripePayment';
+import { useHistory } from 'react-router-dom';
 import { useState } from 'react';
 import { signInUrl } from '@wasp/auth/helpers/Google';
 import { AiOutlineGoogle } from 'react-icons/ai';
@@ -21,9 +21,9 @@ import deleteJob from '@wasp/actions/deleteJob';
 export function LeaveATip({
   isOpen,
   onClose,
-  amount,
+  credits,
 }: {
-  amount: number;
+  credits: number;
   isOpen: boolean;
   onOpen: () => void;
   onClose: () => void;
@@ -31,14 +31,9 @@ export function LeaveATip({
   const [isLoading, setIsLoading] = useState(false);
   const tipRef = useRef(null);
 
-  const coverLettersLeft = 3 - amount < 0 ? 0 : 3 - amount;
-
+  const history = useHistory();
   const handleClick = async () => {
-    setIsLoading(true);
-    const response = await stripePayment();
-    const url = response.sessionUrl;
-    window.open(url, '_blank');
-    setIsLoading(false);
+    history.push('/profile');
     onClose();
   };
 
@@ -51,15 +46,15 @@ export function LeaveATip({
               👋 Thanks for trying CoverLetterGPT.
             </AlertDialogHeader>
 
-            <AlertDialogBody>
-              You have <Code>{coverLettersLeft}</Code> cover letter
-              {coverLettersLeft === 1 ? '' : 's'} left
-              <br /> Get unlimited access for 3 months for only <Code>$4.95</Code> !
+            <AlertDialogBody textAlign='center'>
+              <Text>You have <Code>{credits}</Code> cover letter
+              {credits === 1 ? '' : 's'} left</Text>
+              <Text>Purchase more or get unlimited access for 3 months for only <Code>$4.95</Code> !</Text>
             </AlertDialogBody>
 
             <AlertDialogFooter>
               <Button isLoading={isLoading} ref={tipRef} colorScheme='purple' onClick={handleClick}>
-                💰 Buy Now!
+                💰 Buy More
               </Button>
               <Spacer />
               <Button alignSelf='flex-end' fontSize='sm' variant='solid' size='sm' onClick={onClose}>

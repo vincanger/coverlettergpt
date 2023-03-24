@@ -238,6 +238,11 @@ export const theme = extendTheme({
       border: 'sm',
       rounded: 'lg',
     },
+    cardMd: {
+      bgColor: 'bg-contrast-md',
+      border: 'sm',
+      rounded: 'lg',
+    },
   },
   // shadows: { outline: '0 0 0 1px var(--chakra-colors-active)' },
 });

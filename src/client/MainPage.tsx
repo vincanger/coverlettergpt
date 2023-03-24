@@ -1,4 +1,5 @@
 import {
+  Box,
   HStack,
   VStack,
   Heading,
@@ -20,23 +21,23 @@ import {
   Tooltip,
   useDisclosure,
 } from '@chakra-ui/react';
+import BorderBox from './components/BorderBox';
+import { LeaveATip, LoginToBegin } from './components/AlertDialog';
+import { convertToSliderValue, convertToSliderLabel } from './components/CreativitySlider';
+import * as pdfjsLib from 'pdfjs-dist';
+import { useState, useEffect, useRef } from 'react';
 import { ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
-import { useHistory } from 'react-router-dom';
 import { useQuery } from '@wasp/queries';
+import { useHistory } from 'react-router-dom';
+import { CoverLetter, Job, User } from '@wasp/entities';
+import type { CoverLetterPayload } from './types';
 import getJob from '@wasp/queries/getJob';
-import getUserInfo from '@wasp/queries/getUserInfo';
+import getCoverLetterCount from '@wasp/queries/getCoverLetterCount';
 import generateCoverLetter from '@wasp/actions/generateCoverLetter';
 import createJob from '@wasp/actions/createJob';
 import updateCoverLetter from '@wasp/actions/updateCoverLetter';
-import * as pdfjsLib from 'pdfjs-dist';
-import { useState, useEffect, useRef } from 'react';
-import { CoverLetter, Job, User } from '@wasp/entities';
-import BorderBox from './components/BorderBox';
-import { convertToSliderValue, convertToSliderLabel } from './components/CreativitySlider';
-import type { CoverLetterPayload } from './types';
 import useAuth from '@wasp/auth/useAuth';
-import { LeaveATip, LoginToBegin } from './components/AlertDialog';
 
 function MainPage() {
   const [pdfText, setPdfText] = useState<string | null>(null);
@@ -54,7 +55,7 @@ function MainPage() {
     { enabled: !!jobToFetch }
   );
 
-  const { data: userInfo } = useQuery<unknown, User & { letters: [] }>(getUserInfo);
+  const { data: coverLetterCount } = useQuery<unknown, number>(getCoverLetterCount);
 
   const {
     handleSubmit,
@@ -126,27 +127,29 @@ function MainPage() {
       pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.js`;
       const loadingTask = pdfjsLib.getDocument(typedarray);
       let textBuilder: string = '';
-      loadingTask.promise.then(async (pdf) => {
-        // Loop through each page in the PDF file
-        for (let i = 1; i <= pdf.numPages; i++) {
-          // Get the text content for the page
-          const page = await pdf.getPage(i);
-          const content = await page.getTextContent();
-          const text = content.items
-            .map((item: any) => {
-              if (item.str) {
-                return item.str;
-              }
-              return '';
-            })
-            .join(' ');
-          textBuilder += text;
-        }
-        setPdfText(textBuilder);
-      }).catch((err) => {
-        alert('An Error occured. Please try again.')
-        console.error(err);
-      });
+      loadingTask.promise
+        .then(async (pdf) => {
+          // Loop through each page in the PDF file
+          for (let i = 1; i <= pdf.numPages; i++) {
+            // Get the text content for the page
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            const text = content.items
+              .map((item: any) => {
+                if (item.str) {
+                  return item.str;
+                }
+                return '';
+              })
+              .join(' ');
+            textBuilder += text;
+          }
+          setPdfText(textBuilder);
+        })
+        .catch((err) => {
+          alert('An Error occured. Please try again.');
+          console.error(err);
+        });
     };
     // Read the file as ArrayBuffer
     fileReader.readAsArrayBuffer(pdfFile);
@@ -170,7 +173,6 @@ function MainPage() {
       const creativityValue = convertToSliderValue(sliderValue);
 
       if (!pdfText) {
-        alert('Please upload a pdf file');
         throw new Error('Please upload a pdf file');
       } else {
         payload = {
@@ -186,8 +188,8 @@ function MainPage() {
       setLoadingText();
       const coverLetter = (await generateCoverLetter(payload)) as CoverLetter;
       history.push(`/cover-letter/${coverLetter.id}`);
-    } catch (error) {
-      alert('Something went wrong, please try again');
+    } catch (error: any) {
+      alert(`${error?.message ?? 'Something went wrong, please try again'}`);
       console.error(error);
     }
   }
@@ -209,14 +211,18 @@ function MainPage() {
       }
 
       const creativityValue = convertToSliderValue(sliderValue);
-
-      const payload = {
-        id: job.id,
-        description: values.description,
-        content: pdfText,
-        isCompleteCoverLetter,
-        temperature: creativityValue,
-      };
+      let payload;
+      if (!pdfText) {
+        throw new Error('Please upload a pdf file');
+      } else {
+        payload = {
+          id: job.id,
+          description: values.description,
+          content: pdfText,
+          isCompleteCoverLetter,
+          temperature: creativityValue,
+        };
+      }
 
       setLoadingText();
 
@@ -228,8 +234,8 @@ function MainPage() {
       history.push(`/cover-letter/${updatedJob.coverLetter[updatedJob.coverLetter.length - 1].id}`);
 
       return updatedJob;
-    } catch (error) {
-      alert('Something went wrong, please try again');
+    } catch (error: any) {
+      alert(`${error?.message ?? 'Something went wrong, please try again'}`);
       console.error(error);
     }
   }
@@ -244,17 +250,18 @@ function MainPage() {
     setTimeout(() => {
       loadingTextRef.current && (loadingTextRef.current.innerText = '🧘...');
     }, 12000);
-    setTimeout(() => {
-      loadingTextRef.current && (loadingTextRef.current.innerText = '');
-    }, 35000);
+    // setTimeout(() => {
+    //   loadingTextRef.current && (loadingTextRef.current.innerText = '');
+    // }, 35000);
   }
 
   function checkUsageNumbers(): Boolean {
-    if (!user?.hasPaid && userInfo) {
-      if (userInfo.letters.length >= 1 && userInfo.letters.length < 3) {
+    // TODO: add check for number of credits
+    if (!user?.hasPaid && user?.credits > 0) {
+      if (user?.credits < 3) {
         onOpen();
       }
-      return userInfo.letters.length < 3;
+      return user.credits > 0;
     }
     if (user?.hasPaid) {
       return true;
@@ -269,6 +276,13 @@ function MainPage() {
 
   return (
     <>
+      <Box layerStyle='card' px={4} py={2} _hover={{ bgColor: 'bg-contrast-md' }} transition='0.1s ease-in-out'>
+        <Text fontSize='md'>
+          Over
+          {coverLetterCount && ` ${coverLetterCount} `}
+          Cover Letters Generated! 🎉
+        </Text>
+      </Box>
       <BorderBox>
         <form
           onSubmit={!isCoverLetterUpdate ? handleSubmit(onSubmit) : handleSubmit(onUpdate)}
@@ -397,7 +411,7 @@ function MainPage() {
                   <Slider
                     id='temperature'
                     min={0}
-                    max={85}
+                    max={68}
                     defaultValue={30}
                     colorScheme='purple'
                     onChange={(v) => setSliderValue(v)}
@@ -480,7 +494,7 @@ function MainPage() {
           )}
         </form>
       </BorderBox>
-      <LeaveATip isOpen={isOpen} onOpen={onOpen} onClose={onClose} amount={userInfo?.letters.length || 0} />
+      <LeaveATip isOpen={isOpen} onOpen={onOpen} onClose={onClose} credits={user?.credits} />
       <LoginToBegin isOpen={loginIsOpen} onOpen={loginOnOpen} onClose={loginOnClose} />
     </>
   );

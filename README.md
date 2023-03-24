@@ -1,6 +1,9 @@
 # CoverLetterGPT.xyz
 
+<img src='src/client/static/coverlettegpt.png' width='600px'/>
+
 ## Running it locally
+After cloning this repo, you can run it locally by following these steps:
 
 1. Install [Wasp](https://wasp-lang.dev) by running `curl -sSL https://get.wasp-lang.dev/installer.sh | sh` in your terminal.
 2. Create a `.env.server` file in the root of the project
@@ -24,6 +27,8 @@ Also, [Chakra-ui](https://chakra-ui.com/) is great for building nice looking UIâ
 
 For more info on the prompts and configuration I used for the [OpenAI](https://openai.com/) API, check out the `src/server/actions.ts` file.
 
-[Stripe](https://stripe.com/) makes the `Buy Me a Coffee` functionality super easy. I just used there `Payment Link` feature and configured it as a donate button
+[Stripe](https://stripe.com/) makes the payment functionality super easy. I just used their `Pre-configured Checkout` feature on a one-time purchase product. After the user pays, I update their `hasPaid` and `datePaid` fields in the database. Then I use [Wasp's integrated Jobs](https://wasp-lang.dev/docs/language/features#jobs) feature to run a cron job that checks if 3 months has passed since paying, and if so, it sets `hasPaid` to `false` again.
+
+I also implemented a cron job to send an email to the user to notify them 2 weeks before their subscription ends. I used [SendGrid](https://sendgrid.com/) for the email service.
 
 If you have any other questions, feel free to reach out to me on [twitter](https://twitter.com/hot_town)

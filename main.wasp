@@ -3,7 +3,13 @@ app applyai {
     version: "^0.9.0"
   },
   title: "CoverLetterGPT",
-  // Auth out of the box! https://wasp-lang.dev/docs/language/features#authentication--authorization
+  head: [
+        "<meta property='og:type' content='website' />",
+        "<meta property='og:url' content='https://CoverLetterGPT.xyz' />",
+        "<meta property='og:description' content='Create Unique Cover Letters Based on Your Skills. Supercharge Your Job Search.' />",
+        "<meta property='og:image' content='src/client/static/coverlettegpt.png' />"
+  ],
+  // 🔐 Auth out of the box! https://wasp-lang.dev/docs/language/features#authentication--authorization
   auth: {
     userEntity: User,
     externalAuthEntity: SocialLogin,
@@ -18,11 +24,12 @@ app applyai {
   db: {
     system: PostgreSQL
   },
-  // server: {
-  //   setupFn: import serverSetup from "@server/serverSetup.js"
-  // },
+  server: {
+    setupFn: import serverSetup from "@server/serverSetup.js"
+  },
   client: {
     rootComponent: import App from "@client/App",
+    setupFn: import clientSetup from "@client/clientSetup.js"
   },
 
   dependencies: [
@@ -36,6 +43,7 @@ app applyai {
     ("pdfjs-dist", "3.3.122"),
     ("@types/pdfjs-dist", "2.10.378"),
     ("stripe", "11.15.0"),
+    ("micro", "10.0.1"),
     ("@sendgrid/mail", "7.7.0")
   ],
 }
@@ -54,6 +62,7 @@ entity User {=psl
   stripeId    String? 
   checkoutSessionId String?
   notifyPaymentExpires Boolean @default(false)
+  credits     Int     @default(3)
   letters     CoverLetter[]
   jobs        Job[]
   externalAuthAssociations  SocialLogin[]
@@ -137,9 +146,11 @@ page CheckoutPage {
  * https://wasp-lang.dev/docs/language/features#queries-and-actions-aka-operations
  */
 
+// 📝 Actions aka Mutations
+
 action generateCoverLetter {
   fn: import { generateCoverLetter } from "@server/actions.js",
-  entities: [CoverLetter]
+  entities: [CoverLetter, User]
 }
 
 action createJob {
@@ -154,7 +165,7 @@ action updateJob {
 
 action updateCoverLetter {
   fn: import { updateCoverLetter } from "@server/actions.js",
-  entities: [Job, CoverLetter]
+  entities: [Job, CoverLetter, User]
 }
 
 action updateUser {
@@ -176,6 +187,13 @@ action stripePayment {
   fn: import { stripePayment } from "@server/actions.js",
   entities: [User]
 }
+
+action stripeCreditsPayment {
+  fn: import { stripeCreditsPayment } from "@server/actions.js",
+  entities: [User]
+}
+
+// 📚 Queries
 
 query getJobs {
   fn: import { getJobs } from "@server/queries.js",
@@ -202,7 +220,12 @@ query getUserInfo {
   entities: [User]
 }
 
-/* 🕵️‍♂️ These are the Wasp Cron Jobs. Use them to set up recurring tasks:
+query getCoverLetterCount {
+  fn: import { getCoverLetterCount } from "@server/queries.js",
+  entities: [CoverLetter]
+}
+
+/* 🕵️‍♂️ These are the Wasp Cron Jobs. Use them to set up recurring tasks or queues:
  * https://wasp-lang.dev/docs/language/features#jobs
  */
 

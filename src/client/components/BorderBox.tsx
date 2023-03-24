@@ -1,8 +1,12 @@
-import { Box, VStack } from '@chakra-ui/react';
+import { Box, VStack, BoxProps } from '@chakra-ui/react';
 
-export default function BorderBox({ children }: { children: React.ReactNode }) {
+interface BorderBoxProps extends BoxProps {
+  children: React.ReactNode;
+};
+
+export default function BorderBox({ children, ...props }: BorderBoxProps) {
   return (
-    <Box width={['sm', 'lg', 'xl']} borderRadius='lg' bgGradient='linear(to-b, orange.100, purple.300)' mt={7}>
+    <Box width={['sm', 'lg', 'xl']} borderRadius='lg' bgGradient='linear(to-b, orange.100, purple.300)' mt={7} {...props}>
       <VStack
         bgColor='bg-contrast-overlay'
         border='3px solid transparent'
