@@ -250,9 +250,6 @@ function MainPage() {
     setTimeout(() => {
       loadingTextRef.current && (loadingTextRef.current.innerText = '🧘...');
     }, 12000);
-    // setTimeout(() => {
-    //   loadingTextRef.current && (loadingTextRef.current.innerText = '');
-    // }, 35000);
   }
 
   function checkUsageNumbers(): Boolean {
@@ -276,12 +273,15 @@ function MainPage() {
 
   return (
     <>
-      <Box layerStyle='card' px={4} py={2} _hover={{ bgColor: 'bg-contrast-md' }} transition='0.1s ease-in-out'>
-        <Text fontSize='md'>
-          Over
-          {coverLetterCount && ` ${coverLetterCount} `}
-          Cover Letters Generated! 🎉
-        </Text>
+      <Box
+        layerStyle='card'
+        px={4}
+        py={2}
+        visibility={!coverLetterCount ? 'hidden' : 'visible'}
+        _hover={{ bgColor: 'bg-contrast-md' }}
+        transition='0.1s ease-in-out'
+      >
+        <Text fontSize='md'>Over {coverLetterCount} Cover Letters Generated! 🎉</Text>
       </Box>
       <BorderBox>
         <form

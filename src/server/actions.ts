@@ -104,7 +104,8 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
   try {
     if (!context.user.hasPaid && !context.user.credits) {
       throw new HttpError(402, 'User has not paid or is out of credits');
-    } else if (context.user.credits) {
+    } else if (context.user.credits && !context.user.hasPaid) {
+      console.log('decrementing credits \n\n')
       await context.entities.User.update({
         where: { id: context.user.id },
         data: {

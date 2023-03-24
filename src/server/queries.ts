@@ -91,9 +91,5 @@ export const getUserInfo: GetUserInfo<Pick<User, 'id' | 'email' | 'hasPaid' | 'n
 };
 
 export const getCoverLetterCount: GetCoverLetterCount<number> = async (_args, context) => {
-  if (!context.user) {
-    throw new HttpError(401);
-  }
-
   return context.entities.CoverLetter.count();
 }
