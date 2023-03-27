@@ -1,13 +1,8 @@
 import { extendTheme } from '@chakra-ui/react';
-// import { styles } from './styles';
-// import { colors } from './colors';
-// import { components } from './components';
-
 import { StyleFunctionProps } from '@chakra-ui/theme-tools';
 import { textStyles, fonts } from './text';
 import { semanticTokens } from './tokens';
 import { Input as ChakraInput, Button as ChakraButton, Textarea as ChakraTextarea, Checkbox as ChakraCheckbox, AlertDialog as ChakraAlertDialog } from '@chakra-ui/react';
-import {} from '@chakra-ui/react';
 
 const variantSolid = (props: any) => {
   const { colorScheme: c } = props;
@@ -242,6 +237,12 @@ export const theme = extendTheme({
       bgColor: 'bg-contrast-md',
       border: 'sm',
       rounded: 'lg',
+    },
+    cardLg: {
+      bgColor: 'bg-contrast-lg',
+      border: 'sm',
+      rounded: 'lg',
+      // boxShadow: '0px 0px 0px 1px var(--chakra-colors-active)',
     },
   },
   // shadows: { outline: '0 0 0 1px var(--chakra-colors-active)' },

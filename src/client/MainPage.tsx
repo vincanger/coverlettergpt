@@ -281,7 +281,7 @@ function MainPage() {
         _hover={{ bgColor: 'bg-contrast-md' }}
         transition='0.1s ease-in-out'
       >
-        <Text fontSize='md'>Over {coverLetterCount} Cover Letters Generated! 🎉</Text>
+        <Text fontSize='md'>{coverLetterCount} Cover Letters Generated! 🎉</Text>
       </Box>
       <BorderBox>
         <form

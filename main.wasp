@@ -168,6 +168,16 @@ action updateCoverLetter {
   entities: [Job, CoverLetter, User]
 }
 
+action generateEdit {
+  fn: import { generateEdit } from "@server/actions.js",
+  entities: [CoverLetter, User]
+}
+
+action editCoverLetter {
+  fn: import { editCoverLetter } from "@server/actions.js",
+  entities: [CoverLetter]
+}
+
 action updateUser {
   fn: import { updateUser } from "@server/actions.js",
   entities: [User]

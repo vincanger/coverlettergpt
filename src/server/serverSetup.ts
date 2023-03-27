@@ -25,6 +25,8 @@ export default async function ({ app, server }: ServerSetupFnContext) {
     let event: Stripe.Event = request.body;
     let userStripeId: string | null = null;
 
+    
+
     if (event.type === 'payment_intent.succeeded') {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       console.log('PaymentIntent was successful!', paymentIntent.customer);

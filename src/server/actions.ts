@@ -5,6 +5,8 @@ import type {
   GenerateCoverLetter,
   CreateJob,
   UpdateCoverLetter,
+  EditCoverLetter,
+  GenerateEdit,
   UpdateJob,
   UpdateUser,
   UpdateUserHasPaid,
@@ -105,7 +107,7 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
     if (!context.user.hasPaid && !context.user.credits) {
       throw new HttpError(402, 'User has not paid or is out of credits');
     } else if (context.user.credits && !context.user.hasPaid) {
-      console.log('decrementing credits \n\n')
+      console.log('decrementing credits \n\n');
       await context.entities.User.update({
         where: { id: context.user.id },
         data: {
@@ -136,6 +138,86 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
         job: { connect: { id: jobId } },
       },
     });
+  } catch (error) {
+    if (!context.user.hasPaid) {
+      await context.entities.User.update({
+        where: { id: context.user.id },
+        data: {
+          credits: {
+            increment: 1,
+          },
+        },
+      });
+    }
+    console.error(error);
+  }
+
+  return new Promise((resolve, reject) => {
+    reject(new HttpError(500, 'Something went wrong'));
+  });
+};
+
+export const generateEdit: GenerateEdit<{ content: string; improvement: string }, string> = async (
+  { content, improvement },
+  context
+) => {
+  if (!context.user) {
+    throw new HttpError(401);
+  }
+
+  let command;
+  let tokenNumber;
+  command = `You are a cover letter editor. You will be given a piece of text from a cover letter and told how you can improve it.`;
+  tokenNumber = 1000;
+
+  const payload = {
+    model: 'gpt-3.5-turbo',
+    messages: [
+      {
+        role: 'system',
+        content: command,
+      },
+      {
+        role: 'user',
+        content: `Cover letter text snippet: ${content}. How it should be improved: Please make this text more ${improvement}`,
+      },
+    ],
+    max_tokens: tokenNumber,
+    temperature: 0.7,
+  };
+
+  let json: OpenAIResponse;
+
+  try {
+    if (!context.user.hasPaid && !context.user.credits) {
+      throw new HttpError(402, 'User has not paid or is out of credits');
+    } else if (context.user.credits && !context.user.hasPaid) {
+      console.log('decrementing credits \n\n');
+      await context.entities.User.update({
+        where: { id: context.user.id },
+        data: {
+          credits: {
+            decrement: 1,
+          },
+        },
+      });
+    }
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY!}`,
+      },
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+
+    json = (await response.json()) as OpenAIResponse;
+    if (json?.choices[0].message.content.length) {
+      return new Promise((resolve, reject) => {
+        resolve(json?.choices[0].message.content);
+      });
+    }
   } catch (error) {
     if (!context.user.hasPaid) {
       await context.entities.User.update({
@@ -243,6 +325,24 @@ export const updateCoverLetter: UpdateCoverLetter<UpdateCoverLetterPayload, JobW
     },
     include: {
       coverLetter: true,
+    },
+  });
+};
+
+export const editCoverLetter: EditCoverLetter<{ coverLetterId: string; content: string }, CoverLetter> = (
+  { coverLetterId, content },
+  context
+) => {
+  if (!context.user) {
+    throw new HttpError(401);
+  }
+
+  return context.entities.CoverLetter.update({
+    where: {
+      id: coverLetterId,
+    },
+    data: {
+      content,
     },
   });
 };
@@ -422,7 +522,7 @@ export const stripeCreditsPayment: StripeCreditsPayment<string, StripePaymentRes
   const session: Stripe.Checkout.Session = await stripe.checkout.sessions.create({
     line_items: [
       {
-        // price: PRODUCT_TEST_CREDIT_PRICE_ID, 
+        // price: PRODUCT_TEST_CREDIT_PRICE_ID,
         price: process.env.PRODUCT_CREDITS_PRICE_ID!,
         quantity: 1,
       },
