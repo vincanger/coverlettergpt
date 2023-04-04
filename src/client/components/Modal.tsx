@@ -12,8 +12,10 @@ import {
   Button,
   useClipboard,
 } from '@chakra-ui/react';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
 import { CoverLetter } from '@wasp/entities';
+import { useHistory } from 'react-router-dom';
+import { AiOutlineEdit } from 'react-icons/ai';
 
 type ModalProps = {
   coverLetterData: CoverLetter[];
@@ -23,31 +25,38 @@ type ModalProps = {
 };
 
 export default function ModalElement({ coverLetterData, isOpen, onOpen, onClose }: ModalProps) {
-  const [selectedCoverLetter, setSelectedCoverLetter] = useState<string>(' ');
+  const [selectedCoverLetter, setSelectedCoverLetter] = useState<CoverLetter>(coverLetterData[0]);
 
-  const { hasCopied, onCopy } = useClipboard(selectedCoverLetter);
+  const { hasCopied, onCopy } = useClipboard(selectedCoverLetter.content);
+
+  const history = useHistory();
 
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const copyButtonRef = useRef(null);
 
-  useEffect(() => {
-    setSelectedCoverLetter(coverLetterData[0].content);
-  }, [coverLetterData]);
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedCoverLetterId = e.target.value;
+    const selectedCoverLetter = coverLetterData.find((coverLetter) => coverLetter.id === selectedCoverLetterId);
+    if (selectedCoverLetter) {
+      setSelectedCoverLetter(selectedCoverLetter);
+    }
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} initialFocusRef={copyButtonRef}>
-      <ModalOverlay />
+      <ModalOverlay backdropFilter='auto' backdropInvert='15%' backdropBlur='2px' />
       <ModalContent maxH='2xl' maxW='2xl' bgColor='bg-modal'>
-        <ModalHeader>Your Cover Letter{coverLetterData.length>1 && 's'}</ModalHeader>
+        <ModalHeader>Your Cover Letter{coverLetterData.length > 1 && 's'}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           {coverLetterData.length > 1 && (
             <Select
               placeholder='Select Cover Letter'
-              onChange={(coverLetter) => setSelectedCoverLetter(coverLetter.target.value)}
+              defaultValue={selectedCoverLetter.id}
+              onChange={handleSelectChange}
             >
               {coverLetterData.map((coverLetter) => (
-                <option key={coverLetter.id} value={coverLetter.content}>
+                <option key={coverLetter.id} value={coverLetter.id}>
                   {coverLetter.title} - {coverLetter.id}
                 </option>
               ))}
@@ -63,24 +72,31 @@ export default function ModalElement({ coverLetterData, isOpen, onOpen, onClose 
             resize='none'
             variant='filled'
             dropShadow='lg'
-            value={selectedCoverLetter}
+            value={selectedCoverLetter.content}
             overflow='scroll'
           />
         </ModalBody>
 
         <ModalFooter>
-          <Button ref={copyButtonRef} colorScheme='purple' size='sm' mr={3} onClick={onCopy}>
-            <Tooltip
-              label={hasCopied ? 'Copied!' : 'Copy Letter to Clipboard'}
-              placement='top'
-              hasArrow
-              closeOnClick={false}
-            >
+          <Tooltip
+            label={hasCopied ? 'Copied!' : 'Copy Letter to Clipboard'}
+            placement='top'
+            hasArrow
+            closeOnClick={false}
+          >
+            <Button ref={copyButtonRef} colorScheme='purple' size='sm' mr={3} onClick={onCopy}>
               Copy
-            </Tooltip>
-          </Button>
-          <Button size='sm' variant='outline' onClick={onClose}>
-            Close
+            </Button>
+          </Tooltip>
+          <Button
+            leftIcon={<AiOutlineEdit />}
+            colorScheme='purple'
+            variant='outline'
+            size='sm'
+            mr={3}
+            onClick={() => history.push(`/cover-letter/${selectedCoverLetter.id}`)}
+          >
+            Edit
           </Button>
         </ModalFooter>
       </ModalContent>

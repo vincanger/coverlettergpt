@@ -1,5 +1,5 @@
 import BorderBox from './components/BorderBox';
-import { Heading, Box, Text, Button, Code, Spinner, Checkbox, VStack, HStack } from '@chakra-ui/react';
+import { Heading, Text, Button, Code, Spinner, Checkbox, VStack, HStack } from '@chakra-ui/react';
 import { User } from '@wasp/entities';
 import { useQuery } from '@wasp/queries';
 import getUserInfo from '@wasp/queries/getUserInfo';

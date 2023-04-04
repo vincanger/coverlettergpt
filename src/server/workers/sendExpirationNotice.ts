@@ -35,6 +35,7 @@ export async function sendExpirationNotice(_args: unknown, context: Context) {
       datePaid: {
         equals: twoWeeksFromNow,
       },
+      notifyPaymentExpires: true,
     },
   });
 

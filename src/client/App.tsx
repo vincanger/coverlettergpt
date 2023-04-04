@@ -3,20 +3,34 @@ import { theme } from './theme';
 import { ReactNode, useState, useEffect, createContext } from 'react';
 import NavBar from './components/NavBar';
 import { CallToAction } from './components/CallToAction';
-import { EditPopover } from './components/Popover'
+import { EditPopover } from './components/Popover';
+import { useLocation } from 'react-router-dom';
 
 export const TextareaContext = createContext<HTMLTextAreaElement | null>(null);
 
 export default function App({ children }: { children: ReactNode }) {
   const [tooltip, setTooltip] = useState<{ x: string; y: string; text: string } | null>(null);
+  const [currentText, setCurrentText] = useState<string | null>(null);
 
   const textarea = document.getElementById('cover-letter-textarea') as HTMLTextAreaElement;
 
+  const location = useLocation();
+
   useEffect(() => {
+    if (!location.pathname.includes('cover-letter')) {
+      setTooltip(null);
+    }
+
     function handleMouseUp(event: any) {
       const selection = window.getSelection();
 
-      if (selection?.toString() && window.location.pathname.includes('cover-letter')) {
+      if (selection?.toString() && location.pathname.includes('cover-letter')) {
+        if (selection.toString() === currentText) {
+          setCurrentText(selection.toString());
+          setTooltip(null);
+          return;
+        }
+        setCurrentText(selection.toString());
         // get the x and y coordinates of the mouse position
         const x = event.clientX;
         const y = event.clientY;
@@ -28,14 +42,17 @@ export default function App({ children }: { children: ReactNode }) {
         setTooltip(null);
       }
     }
+    function handleMouseDown() {
+      setCurrentText('');
+    }
 
     document.addEventListener('mouseup', handleMouseUp);
-    // document.addEventListener('mousedown', () => setTooltip(null))
+    document.addEventListener('mousedown', handleMouseDown);
     return () => {
       document.removeEventListener('mouseup', handleMouseUp);
-      // document.removeEventListener('mousedown', () => setTooltip(null));
-    }
-  }, [tooltip]);
+      document.removeEventListener('mousedown', handleMouseDown);
+    };
+  }, [tooltip, location]);
 
   return (
     <ChakraProvider theme={theme}>
@@ -47,7 +64,7 @@ export default function App({ children }: { children: ReactNode }) {
           position='absolute'
           zIndex={100}
         >
-          <EditPopover />
+          <EditPopover setTooltip={setTooltip}/>
         </Box>
         <VStack gap={5}>
           <NavBar />

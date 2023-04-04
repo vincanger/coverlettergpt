@@ -25,12 +25,11 @@ export default function DescriptionModal({ description, isOpen, onClose, onOpen 
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} initialFocusRef={copyButtonRef}>
-      <ModalOverlay />
+      <ModalOverlay backdropFilter='auto' backdropInvert='15%' backdropBlur='2px' />
       <ModalContent maxH='lg' maxW='lg' bgColor='bg-modal'>
         <ModalHeader>Job Description</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-        
           <Textarea
             readOnly
             ref={textAreaRef}

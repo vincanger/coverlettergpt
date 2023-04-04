@@ -138,8 +138,8 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
         job: { connect: { id: jobId } },
       },
     });
-  } catch (error) {
-    if (!context.user.hasPaid) {
+  } catch (error: any) {
+    if (!context.user.hasPaid && error?.statusCode != 402) {
       await context.entities.User.update({
         where: { id: context.user.id },
         data: {
@@ -167,7 +167,7 @@ export const generateEdit: GenerateEdit<{ content: string; improvement: string }
 
   let command;
   let tokenNumber;
-  command = `You are a cover letter editor. You will be given a piece of text from a cover letter and told how you can improve it.`;
+  command = `You are a cover letter editor. You will be given a piece of isolated text from within a cover letter and told how you can improve it. Only respond with the revision.`;
   tokenNumber = 1000;
 
   const payload = {
@@ -179,11 +179,11 @@ export const generateEdit: GenerateEdit<{ content: string; improvement: string }
       },
       {
         role: 'user',
-        content: `Cover letter text snippet: ${content}. How it should be improved: Please make this text more ${improvement}`,
+        content: `Isolated text from within cover letter: ${content}. It should be improved by making it more: ${improvement}`,
       },
     ],
     max_tokens: tokenNumber,
-    temperature: 0.7,
+    temperature: 0.5,
   };
 
   let json: OpenAIResponse;
@@ -218,8 +218,8 @@ export const generateEdit: GenerateEdit<{ content: string; improvement: string }
         resolve(json?.choices[0].message.content);
       });
     }
-  } catch (error) {
-    if (!context.user.hasPaid) {
+  } catch (error: any) {
+    if (!context.user.hasPaid && error?.statusCode != 402) {
       await context.entities.User.update({
         where: { id: context.user.id },
         data: {
@@ -228,7 +228,7 @@ export const generateEdit: GenerateEdit<{ content: string; improvement: string }
           },
         },
       });
-    }
+    } 
     console.error(error);
   }
 

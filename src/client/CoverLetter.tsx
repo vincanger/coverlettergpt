@@ -6,13 +6,14 @@ import { CoverLetter } from '@wasp/entities';
 import BorderBox from './components/BorderBox';
 import { useContext } from 'react';
 import { TextareaContext } from './App';
-import editCoverLetter from '@wasp/actions/editCoverLetter'
-import { useEffect, useState } from 'react'
+import { EditAlert } from './components/AlertDialog';
+import editCoverLetter from '@wasp/actions/editCoverLetter';
+import { useEffect, useState } from 'react';
 
 export function CoverLetter({ match }: { match: match<{ id: string }> }) {
-  const [textareaValue , setTextareaValue] = useState<string | undefined>(undefined)
-  const [editIsLoading , setEditIsLoading] = useState<boolean>(false)
-  const [isEdited , setIsEdited] = useState<boolean>(false)
+  const [textareaValue, setTextareaValue] = useState<string | undefined>(undefined);
+  const [editIsLoading, setEditIsLoading] = useState<boolean>(false);
+  const [isEdited, setIsEdited] = useState<boolean>(false);
 
   const id = match.params.id as string;
   const { data: coverLetter, isLoading } = useQuery<{ id: string | null }, CoverLetter>(
@@ -26,30 +27,30 @@ export function CoverLetter({ match }: { match: match<{ id: string }> }) {
 
   useEffect(() => {
     if (textarea?.value) {
-      setTextareaValue(textarea.value)
+      setTextareaValue(textarea.value);
     }
-  },[textarea])
-
+  }, [textarea]);
+  
   const handleClick = async () => {
-    if (id && textareaValue) {
-      try {
-        setEditIsLoading(true)
-        const editedCoverLetter = await editCoverLetter({ coverLetterId: id, content: textareaValue })
-        console.log('edited cover letter --->', editedCoverLetter)
-        if (!!editedCoverLetter) {
-          setIsEdited(true)
-          setTimeout(() => {
-            setIsEdited(false)
-          }, 2500)
-        }
 
+    if (id && textarea?.value) {
+      try {
+        setTextareaValue(textarea.value);
+        setEditIsLoading(true)
+        const editedCoverLetter = await editCoverLetter({ coverLetterId: id, content: textarea.value });
+        if (!!editedCoverLetter) {
+          setIsEdited(true);
+          setTimeout(() => {
+            setIsEdited(false);
+          }, 2500);
+        }
       } catch (error) {
-        console.error(error)
-        alert('An error occured. Please try again.')
+        console.error(error);
+        alert('An error occured. Please try again.');
       }
-      setEditIsLoading(false)
+      setEditIsLoading(false);
     }
-  }
+  };
 
   return (
     <>
@@ -112,6 +113,7 @@ export function CoverLetter({ match }: { match: match<{ id: string }> }) {
           </HStack>
         )}
       </BorderBox>
+      <EditAlert coverLetter={!!coverLetter} />
     </>
   );
 }
