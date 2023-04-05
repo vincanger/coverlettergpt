@@ -25,8 +25,8 @@ export default function App({ children }: { children: ReactNode }) {
       const selection = window.getSelection();
 
       if (selection?.toString() && location.pathname.includes('cover-letter')) {
+        // closes the tooltip when the user clicks a tooltip button
         if (selection.toString() === currentText) {
-          setCurrentText(selection.toString());
           setTooltip(null);
           return;
         }
@@ -43,7 +43,9 @@ export default function App({ children }: { children: ReactNode }) {
       }
     }
     function handleMouseDown() {
-      setCurrentText('');
+      if (location.pathname.includes('cover-letter')) {
+        setCurrentText(null);
+      } 
     }
 
     document.addEventListener('mouseup', handleMouseUp);

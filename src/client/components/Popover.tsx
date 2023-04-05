@@ -4,6 +4,9 @@ import { useContext, useState, useEffect } from 'react';
 import { TextareaContext } from '../App';
 import useAuth from '@wasp/auth/useAuth';
 import { LeaveATip } from './AlertDialog';
+import getUserInfo from '@wasp/queries/getUserInfo';
+import { User } from '@wasp/entities';
+import { useQuery } from '@wasp/queries';
 
 interface EditPopoverProps extends ButtonGroupProps {
   selectedText?: string;
@@ -15,6 +18,7 @@ export function EditPopover({ setTooltip, selectedText, ...props}: EditPopoverPr
   const textarea = useContext(TextareaContext);
 
   const { data: user } = useAuth()
+  const { data: userInfo } = useQuery<{ id: number | null }, User & { letters: [] }>(getUserInfo, { id: user?.id }, { enabled: !!user?.id });
 
   const { isOpen: isPayOpen, onOpen: onPayOpen, onClose: onPayClose } = useDisclosure();
 
@@ -73,12 +77,14 @@ export function EditPopover({ setTooltip, selectedText, ...props}: EditPopoverPr
   };
 
   const handleClick = (value: string) => {
-    if (!user.credits && !user.hasPaid) {
+    if (!userInfo?.credits && !userInfo?.hasPaid) {
       onPayOpen()
       setTooltip(null);
+      window.getSelection()?.removeAllRanges();
       return
     }
     replaceSelectedText({ improvement: value });
+    window.getSelection()?.removeAllRanges();
   };
 
   return (
@@ -107,7 +113,7 @@ export function EditPopover({ setTooltip, selectedText, ...props}: EditPopoverPr
           </ButtonGroup>
         </Box>
       </VStack>
-      <LeaveATip isOpen={isPayOpen} onOpen={onPayOpen} onClose={onPayClose} credits={user?.credits || 0} />
+      <LeaveATip isOpen={isPayOpen} onOpen={onPayOpen} onClose={onPayClose} credits={userInfo?.credits || 0} />
     </>
   );
 }
