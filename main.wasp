@@ -53,56 +53,56 @@ app applyai {
  */
 
 entity User {=psl
-  id          Int     @id @default(autoincrement())
-  username    String  @unique
-  password    String
-  email       String?
-  hasPaid     Boolean @default(false)
-  datePaid    DateTime?
-  stripeId    String? 
-  checkoutSessionId String?
-  notifyPaymentExpires Boolean @default(false)
-  credits     Int     @default(3)
-  letters     CoverLetter[]
-  jobs        Job[]
+  id                        Int                  @id @default(autoincrement())
+  username                  String               @unique
+  password                  String
+  email                     String?
+  hasPaid                   Boolean              @default(false)
+  datePaid                  DateTime?
+  stripeId                  String? 
+  checkoutSessionId         String?
+  notifyPaymentExpires      Boolean              @default(false)
+  credits                   Int                  @default(3)
+  letters                   CoverLetter[]
+  jobs                      Job[]
   externalAuthAssociations  SocialLogin[]
 psl=}
 
 entity SocialLogin {=psl
-  id          String    @id @default(uuid())
-  provider    String
-  providerId  String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      Int
-  createdAt   DateTime  @default(now())
+  id                        String                @id @default(uuid())
+  provider                  String
+  providerId                String
+  user                      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                    Int
+  createdAt                 DateTime              @default(now())
   @@unique([provider, providerId, userId])
 psl=}
 
 entity CoverLetter {=psl
-  id         String     @id @default(uuid())
-  title      String
-  content    String
-  tokenUsage Int
-  job        Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  jobId      String
-  user       User?      @relation(fields: [userId], references: [id])
-  userId     Int?
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime?  @updatedAt
+  id                        String                @id @default(uuid())
+  title                     String
+  content                   String
+  tokenUsage                Int
+  job                       Job                   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId                     String
+  user                      User?                 @relation(fields: [userId], references: [id])
+  userId                    Int?
+  createdAt                 DateTime              @default(now())
+  updatedAt                 DateTime?             @updatedAt
 psl=}
 
 entity Job {=psl
-  id            String         @id @default(uuid())
-  title         String
-  company       String
-  location      String
-  description   String
-  coverLetter   CoverLetter[] 
-  user          User?          @relation(fields: [userId], references: [id])
-  userId        Int?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  isCompleted   Boolean        @default(false)
+  id                        String                @id @default(uuid())
+  title                     String
+  company                   String
+  location                  String
+  description               String
+  coverLetter               CoverLetter[] 
+  user                      User?                 @relation(fields: [userId], references: [id])
+  userId                    Int?
+  createdAt                 DateTime              @default(now())
+  updatedAt                 DateTime              @updatedAt
+  isCompleted               Boolean               @default(false)
 psl=}
 
 /* 📡 These are the Wasp Routes (You can protect them easily w/ 'authRequired: true');
