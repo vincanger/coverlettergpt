@@ -27,12 +27,12 @@ const gptConfig = {
 You will be given a job description along with the job applicant's resume.
 You will write a cover letter for the applicant that matches their past experiences from the resume with the job description.
 Rather than simply outlining the applicant's past experiences, you will give more detail and explain how those experiences will help the applicant succeed in the new job.
-You will write the cover letter in a modern, professional style without being too formal, as a software developer might do naturally.`,
+You will write the cover letter in a modern, professional style without being too formal, as a modern employee might do naturally.`,
   coverLetterWithAWittyRemark: `You are a cover letter generator.
 You will be given a job description along with the job applicant's resume.
 You will write a cover letter for the applicant that matches their past experiences from the resume with the job description.
 Rather than simply outlining the applicant's past experiences, you will give more detail and explain how those experiences will help the applicant succeed in the new job.
-You will write the cover letter in a modern, relaxed style, as a software developer might do naturally.
+You will write the cover letter in a modern, relaxed style, as a modern employee might do naturally.
 Include a job related joke at the end of the cover letter.`,
   ideasForCoverLetter:
     "You are a cover letter idea generator. You will be given a job description along with the job applicant's resume. You will generate a bullet point list of ideas for the applicant to use in their cover letter. ",
@@ -363,7 +363,7 @@ export const deleteJob: DeleteJob<{ jobId: string }, { count: number }> = ({ job
   });
 };
 
-type UpdateUserArgs = Pick<User, 'notifyPaymentExpires'>;
+type UpdateUserArgs = Pick<User, 'id' | 'notifyPaymentExpires'>;
 type UserWithoutPassword = Omit<User, 'password'>;
 
 export const updateUser: UpdateUser<UpdateUserArgs, UserWithoutPassword> = async (
@@ -443,7 +443,7 @@ type StripePaymentResult = {
   sessionId: string;
 };
 
-export const stripePayment: StripePayment<string, StripePaymentResult> = async (_args, context) => {
+export const stripePayment: StripePayment<void, StripePaymentResult> = async (_args, context) => {
   if (!context.user || !context.user.email) {
     throw new HttpError(401, 'User or email not found');
   }
@@ -464,7 +464,6 @@ export const stripePayment: StripePayment<string, StripePaymentResult> = async (
   const session: Stripe.Checkout.Session = await stripe.checkout.sessions.create({
     line_items: [
       {
-        // price: process.env.PRODUCT_TEST_PRICE_ID!, // change back to PRODUCT_PRICE_ID and KEY also
         price: process.env.PRODUCT_PRICE_ID!,
         quantity: 1,
       },
@@ -501,7 +500,7 @@ export const stripePayment: StripePayment<string, StripePaymentResult> = async (
   });
 };
 
-export const stripeCreditsPayment: StripeCreditsPayment<string, StripePaymentResult> = async (_args, context) => {
+export const stripeCreditsPayment: StripeCreditsPayment<void, StripePaymentResult> = async (_args, context) => {
   if (!context.user || !context.user.email) {
     throw new HttpError(401, 'User or email not found');
   }
@@ -522,7 +521,6 @@ export const stripeCreditsPayment: StripeCreditsPayment<string, StripePaymentRes
   const session: Stripe.Checkout.Session = await stripe.checkout.sessions.create({
     line_items: [
       {
-        // price: PRODUCT_TEST_CREDIT_PRICE_ID,
         price: process.env.PRODUCT_CREDITS_PRICE_ID!,
         quantity: 1,
       },

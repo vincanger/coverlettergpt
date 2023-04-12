@@ -1,6 +1,6 @@
 app applyai {
   wasp: {
-    version: "^0.9.0"
+    version: "^0.10.0"
   },
   title: "CoverLetterGPT",
   head: [
@@ -25,14 +25,17 @@ app applyai {
   db: {
     system: PostgreSQL
   },
-  server: {
-    setupFn: import serverSetup from "@server/serverSetup.js"
-  },
   client: {
     rootComponent: import App from "@client/App",
     setupFn: import clientSetup from "@client/clientSetup.js"
   },
-
+  emailSender: {
+    provider: SendGrid,
+    defaultFrom: {
+      name: "CoverLetterGPT",
+      email: "vince@wasp-lang.dev",
+    },
+  },
   dependencies: [
     ("node-fetch", "3.3.0"),
     ("@chakra-ui/react", "1.8.8"),
@@ -44,8 +47,8 @@ app applyai {
     ("pdfjs-dist", "3.3.122"),
     ("@types/pdfjs-dist", "2.10.378"),
     ("stripe", "11.15.0"),
-    ("@sendgrid/mail", "7.7.0")
   ],
+
 }
 
 /* 💽 Wasp defines DB entities via Prisma Database Models: 
@@ -116,7 +119,7 @@ page MainPage {
 
 route CoverLetterPage { path: "/cover-letter/:id", to: CoverLetterPage }
 page CoverLetterPage {
-  component: import { CoverLetter } from "@client/CoverLetter"
+  component: import CoverLetter from "@client/CoverLetterPage"
 }
 
 route LoginRoute { path: "/login", to: LoginPage }
@@ -235,6 +238,16 @@ query getCoverLetterCount {
   entities: [CoverLetter]
 }
 
+/* 📡 These are custom Wasp API Endpoints. Use them for callbacks, webhooks, etc.
+ * https://wasp-lang.dev/docs/language/features#apis
+ */ 
+
+api stripeWebhook {
+  fn: import { stripeWebhook } from "@server/webhooks.js",
+  entities: [User],
+  httpRoute: (POST, "/stripe-webhook")
+}
+
 /* 🕵️‍♂️ These are the Wasp Cron Jobs. Use them to set up recurring tasks or queues:
  * https://wasp-lang.dev/docs/language/features#jobs
  */
@@ -257,14 +270,6 @@ job checkExpirationDate {
   },
   schedule: {
     cron: "0 17 * * *" 
-  },
-  entities: [User]
-}
-
-job emailSender {
-  executor: PgBoss,
-  perform: {
-    fn: import { sendGrid } from "@server/workers/sendGrid.js"
   },
   entities: [User]
 }

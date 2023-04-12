@@ -1,87 +1,76 @@
 import { VStack, ButtonGroup, Button, ButtonGroupProps, Text, Box, useDisclosure } from '@chakra-ui/react';
 import generateEdit from '@wasp/actions/generateEdit';
-import { useContext, useState, useEffect } from 'react';
+import { useContext } from 'react';
 import { TextareaContext } from '../App';
-import useAuth from '@wasp/auth/useAuth';
 import { LeaveATip } from './AlertDialog';
 import getUserInfo from '@wasp/queries/getUserInfo';
-import { User } from '@wasp/entities';
 import { useQuery } from '@wasp/queries';
+import type { User } from '@wasp/entities';
 
 interface EditPopoverProps extends ButtonGroupProps {
   selectedText?: string;
   setTooltip: any;
+  user: Omit<User, 'password'>;
 }
 
-export function EditPopover({ setTooltip, selectedText, ...props}: EditPopoverProps) {
-  const [updatedText, setUpdatedText] = useState('');
-  const textarea = useContext(TextareaContext);
+export function EditPopover({ setTooltip, selectedText, user, ...props }: EditPopoverProps) {
+  const { textareaState, setTextareaState } = useContext(TextareaContext);
 
-  const { data: user } = useAuth()
-  const { data: userInfo } = useQuery<{ id: number | null }, User & { letters: [] }>(getUserInfo, { id: user?.id }, { enabled: !!user?.id });
+  const { data: userInfo } = useQuery(getUserInfo, { id: user.id });
 
   const { isOpen: isPayOpen, onOpen: onPayOpen, onClose: onPayClose } = useDisclosure();
-
-  useEffect(() => {
-    if (textarea) {
-      setUpdatedText(textarea.value);
-    }
-  }, [textarea?.value]);
 
   const replaceSelectedText = async ({ improvement }: { improvement: string }) => {
     const selection = window.getSelection();
     let loadingInterval;
-    if (textarea) {
-      try {
-        const value = updatedText ?? textarea.innerHTML;
-        const selectString = selection!.toString();
-        const index = value.indexOf(selectString);
 
-        let loadingString = 'Loading';
-        loadingInterval = setInterval(() => {
+    try {
+      const value = textareaState;
+      const selectString = selection!.toString();
+      const index = value.indexOf(selectString);
 
-          if (loadingString.length < 'Loading...'.length) {
-            loadingString += '.';
-            let loading =
-              value.slice(0, index + selectString.length) +
-              '\n --- \n' +
-              loadingString +
-              '\n --- \n' +
-              value.slice(index + selectString.length);
-            textarea.value = loading;
-            setUpdatedText(loading);
-          } else {
-            loadingString = 'Loading';
-          }
-        }, 750);
+      let loadingString = 'Loading';
+      loadingInterval = setInterval(() => {
+        if (loadingString.length < 'Loading...'.length) {
+          loadingString += '.';
+          let loading =
+            value.slice(0, index + selectString.length) +
+            '\n --- \n' +
+            loadingString +
+            '\n --- \n' +
+            value.slice(index + selectString.length);
+          setTextareaState(loading);
 
-        const newValue = await generateEdit({ content: selectString, improvement });
-        clearInterval(loadingInterval);
-        textarea.value = value
+        } else {
+          loadingString = 'Loading';
+        }
+      }, 750);
 
-        const newText =
-          value.slice(0, index + selectString.length) +
-          '\n --- Revision: \n' +
-          newValue +
-          '\n --- \n' +
-          value.slice(index + selectString.length);
+      const newValue = await generateEdit({ content: selectString, improvement });
+      clearInterval(loadingInterval);
+      setTextareaState(value);
 
-        setUpdatedText(newText);
-        textarea.value = newText;
-      } catch (error) {
-        console.error(error);
-        clearInterval(loadingInterval);
-        alert('An error has occurred');
-      }
+      const newText =
+        value.slice(0, index + selectString.length) +
+        '\n --- Revision: \n' +
+        newValue +
+        '\n --- \n' +
+        value.slice(index + selectString.length);
+
+      setTextareaState(newText);
+    } catch (error) {
+      console.error(error);
+      clearInterval(loadingInterval);
+      alert('An error has occurred');
     }
   };
 
   const handleClick = (value: string) => {
     if (!userInfo?.credits && !userInfo?.hasPaid) {
-      onPayOpen()
+      onPayOpen();
       setTooltip(null);
       window.getSelection()?.removeAllRanges();
-      return
+      return;
     }
     replaceSelectedText({ improvement: value });
     window.getSelection()?.removeAllRanges();

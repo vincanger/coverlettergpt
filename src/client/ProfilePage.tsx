@@ -1,30 +1,33 @@
 import BorderBox from './components/BorderBox';
 import { Heading, Text, Button, Code, Spinner, Checkbox, VStack, HStack } from '@chakra-ui/react';
-import { User } from '@wasp/entities';
+import { CoverLetter, User } from '@wasp/entities';
 import { useQuery } from '@wasp/queries';
 import getUserInfo from '@wasp/queries/getUserInfo';
 import updateUser from '@wasp/actions/updateUser';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import stripePayment from '@wasp/actions/stripePayment';
 import stripeCreditsPayment from '@wasp/actions/stripeCreditsPayment';
 import logout from '@wasp/auth/logout';
-import { useAction } from '@wasp/actions';
+import { useAction, OptimisticUpdateDefinition } from '@wasp/actions';
 
 export default function ProfilePage({ user }: { user: User }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isCreditsLoading, setIsCreditsLoading] = useState(false);
 
-  const { data: userInfo } = useQuery<{ id: number | null }, User & { letters: [] }>(getUserInfo, { id: user.id });
+  const { data: userInfo } = useQuery(getUserInfo, { id: user.id });
 
   const userPaidOnDay = new Date(String(user.datePaid));
   const threeMonthsFromDatePaid = new Date(userPaidOnDay.setMonth(userPaidOnDay.getMonth() + 3));
 
-  const updateUserOptimistically = useAction<Pick<User, 'id' | 'notifyPaymentExpires'>, User>(updateUser, {
+  const updateUserOptimistically = useAction(updateUser, {
     optimisticUpdates: [
       {
         getQuerySpecifier: ({ id }) => [getUserInfo, { id }],
         updateQuery: ({ notifyPaymentExpires }, oldData) => ({ ...oldData, notifyPaymentExpires }),
-      },
+      } as OptimisticUpdateDefinition<
+        Pick<User, 'id' | 'notifyPaymentExpires'>,
+        Pick<User, 'id' | 'email' | 'hasPaid' | 'notifyPaymentExpires' | 'credits'> & { letters: CoverLetter[] }
+      >,
     ],
   });
 
@@ -33,7 +36,7 @@ export default function ProfilePage({ user }: { user: User }) {
     try {
       const response = await stripePayment();
       const url = response.sessionUrl;
-      window.open(url, '_self');
+      if (url) window.open(url, '_self');
     } catch (error) {
       alert('Something went wrong. Please try again');
     }
@@ -45,7 +48,7 @@ export default function ProfilePage({ user }: { user: User }) {
     try {
       const response = await stripeCreditsPayment();
       const url = response.sessionUrl;
-      window.open(url, '_self');
+      if (url) window.open(url, '_self');
     } catch (error) {
       alert('Something went wrong. Please try again');
     }

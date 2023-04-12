@@ -1,20 +1,22 @@
 import { ChakraProvider, VStack, Box } from '@chakra-ui/react';
 import { theme } from './theme';
-import { ReactNode, useState, useEffect, createContext } from 'react';
+import { ReactNode, useState, useEffect, useRef, createContext } from 'react';
 import NavBar from './components/NavBar';
 import { CallToAction } from './components/CallToAction';
 import { EditPopover } from './components/Popover';
 import { useLocation } from 'react-router-dom';
+import useAuth from '@wasp/auth/useAuth';
 
-export const TextareaContext = createContext<HTMLTextAreaElement | null>(null);
+export const TextareaContext = createContext({ textareaState: '', setTextareaState: (value: string) => { } });
 
 export default function App({ children }: { children: ReactNode }) {
   const [tooltip, setTooltip] = useState<{ x: string; y: string; text: string } | null>(null);
   const [currentText, setCurrentText] = useState<string | null>(null);
-
-  const textarea = document.getElementById('cover-letter-textarea') as HTMLTextAreaElement;
+  const [textareaState, setTextareaState] = useState<string>('');
 
   const location = useLocation();
+
+  const { data: user } = useAuth();
 
   useEffect(() => {
     if (!location.pathname.includes('cover-letter')) {
@@ -45,7 +47,7 @@ export default function App({ children }: { children: ReactNode }) {
     function handleMouseDown() {
       if (location.pathname.includes('cover-letter')) {
         setCurrentText(null);
-      } 
+      }
     }
 
     document.addEventListener('mouseup', handleMouseUp);
@@ -58,7 +60,10 @@ export default function App({ children }: { children: ReactNode }) {
 
   return (
     <ChakraProvider theme={theme}>
-      <TextareaContext.Provider value={textarea}>
+      <TextareaContext.Provider value={{
+        textareaState,
+        setTextareaState
+      }}>
         <Box
           top={tooltip?.y}
           left={tooltip?.x}
@@ -66,7 +71,7 @@ export default function App({ children }: { children: ReactNode }) {
           position='absolute'
           zIndex={100}
         >
-          <EditPopover setTooltip={setTooltip}/>
+          {!!user && <EditPopover setTooltip={setTooltip} user={user} />}
         </Box>
         <VStack gap={5}>
           <NavBar />

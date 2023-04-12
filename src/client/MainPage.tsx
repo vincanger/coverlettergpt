@@ -29,9 +29,9 @@ import { useState, useEffect, useRef } from 'react';
 import { ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@wasp/queries';
-import { useHistory } from 'react-router-dom';
-import { CoverLetter, Job, User } from '@wasp/entities';
-import type { CoverLetterPayload } from './types';
+import { useHistory, useLocation } from 'react-router-dom';
+import { CoverLetter, Job } from '@wasp/entities';
+import type { CoverLetterPayload, JobPayload } from './types';
 import getJob from '@wasp/queries/getJob';
 import getCoverLetterCount from '@wasp/queries/getCoverLetterCount';
 import generateCoverLetter from '@wasp/actions/generateCoverLetter';
@@ -41,7 +41,7 @@ import useAuth from '@wasp/auth/useAuth';
 
 function MainPage() {
   const [pdfText, setPdfText] = useState<string | null>(null);
-  const [jobToFetch, setJobToFetch] = useState<string | null>(null);
+  const [jobToFetch, setJobToFetch] = useState<string>('');
   const [isCoverLetterUpdate, setIsCoverLetterUpdate] = useState<boolean>(false);
   const [isCompleteCoverLetter, setIsCompleteCoverLetter] = useState<boolean>(true);
   const [sliderValue, setSliderValue] = useState(30);
@@ -49,31 +49,35 @@ function MainPage() {
 
   const { data: user, isLoading: isUserLoading } = useAuth();
 
-  const { data: job, isLoading: isJobLoading } = useQuery<{ id: string | null }, Job>(
-    getJob,
-    { id: jobToFetch },
-    { enabled: !!jobToFetch }
-  );
+  const history = useHistory();
+  const urlParams = new URLSearchParams(window.location.search);
+  const jobIdParam = urlParams.get('job');
 
-  const { data: coverLetterCount } = useQuery<unknown, number>(getCoverLetterCount);
+  const {
+    data: job,
+    isLoading: isJobLoading,
+    error: getJobError,
+  } = useQuery(getJob, { id: jobToFetch }, { enabled: !!jobIdParam });
+
+  const { data: coverLetterCount } = useQuery(getCoverLetterCount);
 
   const {
     handleSubmit,
     register,
+    setValue,
     reset,
+    clearErrors,
     formState: { errors: formErrors, isSubmitting },
   } = useForm();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: loginIsOpen, onOpen: loginOnOpen, onClose: loginOnClose } = useDisclosure();
 
-  const history = useHistory();
   const loadingTextRef = useRef<HTMLDivElement>(null);
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const jobIdParam = urlParams.get('job');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+
     if (jobIdParam) {
       setJobToFetch(jobIdParam);
       setIsCoverLetterUpdate(true);
@@ -106,9 +110,8 @@ function MainPage() {
 
   // pdf to text parser
   async function onFileUpload(event: ChangeEvent<HTMLInputElement>) {
-    if (event.target.files == null) {
-      return;
-    }
+    if (event.target.files == null) return;
+    if (event.target.files.length == 0) return;
 
     setPdfText(null);
     const pdfFile = event.target.files[0];
@@ -145,14 +148,20 @@ function MainPage() {
             textBuilder += text;
           }
           setPdfText(textBuilder);
+          setValue('pdf', textBuilder);
+          clearErrors('pdf');
         })
         .catch((err) => {
-          alert('An Error occured. Please try again.');
+          alert('An Error occured uploading your PDF. Please try again.');
           console.error(err);
         });
     };
     // Read the file as ArrayBuffer
-    fileReader.readAsArrayBuffer(pdfFile);
+    try {
+      fileReader.readAsArrayBuffer(pdfFile);
+    } catch (error) {
+      alert('An Error occured uploading your PDF. Please try again.');
+    }
   }
 
   async function onSubmit(values: any): Promise<void> {
@@ -168,23 +177,19 @@ function MainPage() {
 
     try {
       const job = (await createJob(values)) as Job;
-      let payload: CoverLetterPayload;
 
       const creativityValue = convertToSliderValue(sliderValue);
 
-      if (!pdfText) {
-        throw new Error('Please upload a pdf file');
-      } else {
-        payload = {
-          jobId: job.id,
-          title: job.title,
-          content: pdfText,
-          description: job.description,
-          isCompleteCoverLetter,
-          includeWittyRemark: values.includeWittyRemark,
-          temperature: creativityValue,
-        };
-      }
+      const payload: CoverLetterPayload = {
+        jobId: job.id,
+        title: job.title,
+        content: values.pdf,
+        description: job.description,
+        isCompleteCoverLetter,
+        includeWittyRemark: values.includeWittyRemark,
+        temperature: creativityValue,
+      };
+
       setLoadingText();
       const coverLetter = (await generateCoverLetter(payload)) as CoverLetter;
       history.push(`/cover-letter/${coverLetter.id}`);
@@ -194,7 +199,7 @@ function MainPage() {
     }
   }
 
-  async function onUpdate(values: any): Promise<(Job & { coverLetter: CoverLetter[] }) | undefined> {
+  async function onUpdate(values: any): Promise<void> {
     const canUserContinue = checkUsageNumbers();
     if (!user) {
       history.push('/login');
@@ -218,9 +223,10 @@ function MainPage() {
         payload = {
           id: job.id,
           description: values.description,
-          content: pdfText,
+          content: values.pdf,
           isCompleteCoverLetter,
           temperature: creativityValue,
+          includeWittyRemark: values.includeWittyRemark,
         };
       }
 
@@ -232,11 +238,17 @@ function MainPage() {
         throw new Error('Cover letter not found');
       }
       history.push(`/cover-letter/${updatedJob.coverLetter[updatedJob.coverLetter.length - 1].id}`);
-
-      return updatedJob;
     } catch (error: any) {
       alert(`${error?.message ?? 'Something went wrong, please try again'}`);
       console.error(error);
+    }
+  }
+
+  function handleFileButtonClick() {
+    if (!fileInputRef.current) {
+      return;
+    } else {
+      fileInputRef.current.click();
     }
   }
 
@@ -254,22 +266,25 @@ function MainPage() {
 
   function checkUsageNumbers(): Boolean {
     // TODO: add check for number of credits
-    if (!user?.hasPaid && user?.credits > 0) {
-      if (user?.credits < 3) {
-        onOpen();
+    if (user) {
+      if (!user.hasPaid && user.credits > 0) {
+        if (user.credits < 3) {
+          onOpen();
+        }
+        return user.credits > 0;
       }
-      return user.credits > 0;
-    }
-    if (user?.hasPaid) {
-      return true;
-    } else if (!user?.hasPaid) {
-      return false;
+      if (user.hasPaid) {
+        return true;
+      } else if (!user.hasPaid) {
+        return false;
+      }
     }
     return false;
   }
 
   const showForm = (isCoverLetterUpdate && job) || !isCoverLetterUpdate;
   const showSpinner = isCoverLetterUpdate && isJobLoading;
+  const showJobNotFound = isCoverLetterUpdate && !job && !isJobLoading;
 
   return (
     <>
@@ -360,18 +375,24 @@ function MainPage() {
                 />
                 <FormErrorMessage>{formErrors.description && formErrors.description.message}</FormErrorMessage>
               </FormControl>
-              <FormControl>
+              <FormControl isInvalid={!!formErrors.pdf}>
                 <Input
                   id='pdf'
-                  name='pdf'
                   type='file'
                   accept='application/pdf'
                   placeholder='pdf'
-                  onChange={onFileUpload}
+                  {...register('pdf', {
+                    required: 'Please upload a CV/Resume',
+                  })}
+                  onChange={(e) => {
+                    onFileUpload(e);
+                  }}
                   display='none'
+                  ref={fileInputRef}
                 />
                 <VStack
-                  border={'sm'}
+                  border={!!formErrors.pdf ? '1px solid #FC8181' : 'sm'}
+                  boxShadow={!!formErrors.pdf ? '0 0 0 1px #FC8181' : 'none'}
                   bg='bg-contrast-sm'
                   p={3}
                   alignItems='flex-start'
@@ -384,10 +405,13 @@ function MainPage() {
                   }
                 >
                   <HStack>
-                    <Button size='sm' colorScheme='contrast'>
-                      <label htmlFor='pdf'>Upload CV</label>
-                    </Button>
+                    <FormLabel textAlign='center' htmlFor='pdf'>
+                      <Button size='sm' colorScheme='contrast' onClick={handleFileButtonClick}>
+                        Upload CV
+                      </Button>
+                    </FormLabel>
                     {pdfText && <Text fontSize={'sm'}>👍 uploaded</Text>}
+                    <FormErrorMessage>{formErrors.pdf && formErrors.pdf.message}</FormErrorMessage>
                   </HStack>
                   <FormHelperText mt={0.5} fontSize={'xs'}>
                     Upload a PDF only of Your CV/Resumé
@@ -410,9 +434,9 @@ function MainPage() {
                 <FormControl my={2}>
                   <Slider
                     id='temperature'
+                    defaultValue={30}
                     min={0}
                     max={68}
-                    defaultValue={30}
                     colorScheme='purple'
                     onChange={(v) => setSliderValue(v)}
                     onMouseEnter={() => setShowTooltip(true)}
@@ -492,9 +516,16 @@ function MainPage() {
               </HStack>
             </>
           )}
+          {showJobNotFound && (
+            <>
+              <Text fontSize='sm' color='text-contrast-md'>
+                Can't find that job...
+              </Text>
+            </>
+          )}
         </form>
       </BorderBox>
-      <LeaveATip isOpen={isOpen} onOpen={onOpen} onClose={onClose} credits={user?.credits} />
+      <LeaveATip isOpen={isOpen} onOpen={onOpen} onClose={onClose} credits={user?.credits || 0} />
       <LoginToBegin isOpen={loginIsOpen} onOpen={loginOnOpen} onClose={loginOnClose} />
     </>
   );

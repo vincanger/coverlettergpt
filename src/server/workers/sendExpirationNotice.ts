@@ -1,11 +1,12 @@
-import { emailSender } from '@wasp/jobs/emailSender.js';
-import type { Email } from './sendGrid';
+import { emailSender } from '@wasp/email/index.js';
+
+import type { Email } from '@wasp/email/core/types';
 import type { Context } from '../types';
 
 const emailToSend: Email = {
   to: '',
   subject: 'Your CoverLetterGPT.xyz subscription is about to expire',
-  text: 'Hey There! This is just a reminder that your subscription for https://CoverLetterGPT.xyz is expiring in just two weeks. If you have any questions or concerns regarding your subscription, please don\'t hesitate to reach out. Thanks again for your support and good luck with your job search! -Vince from CoverLetterGPT',
+  text: "Hey There! This is just a reminder that your subscription for https://CoverLetterGPT.xyz is expiring in just two weeks. If you have any questions or concerns regarding your subscription, please don't hesitate to reach out. Thanks again for your support and good luck with your job search! -Vince from CoverLetterGPT",
   html: `<html lang="en">
           <head>
             <meta charset="UTF-8">
@@ -28,7 +29,7 @@ export async function sendExpirationNotice(_args: unknown, context: Context) {
   const currentDate = new Date();
   const twoWeeksFromNow = new Date(currentDate.getTime() + 14 * 24 * 60 * 60 * 1000);
 
-  console.log('Starting CRON JOB: \n\nSending expiration notices...')
+  console.log('Starting CRON JOB: \n\nSending expiration notices...');
 
   const users = await context.entities.User.findMany({
     where: {
@@ -39,10 +40,10 @@ export async function sendExpirationNotice(_args: unknown, context: Context) {
     },
   });
 
-  console.log('Sending expiration notices to users: ', users.length)
+  console.log('Sending expiration notices to users: ', users.length);
 
   if (users.length === 0) {
-    console.log('No users to send expiration notices to.')
+    console.log('No users to send expiration notices to.');
     return;
   }
   await Promise.allSettled(
@@ -50,7 +51,7 @@ export async function sendExpirationNotice(_args: unknown, context: Context) {
       if (user.email) {
         try {
           emailToSend.to = user.email;
-          await emailSender.submit(emailToSend);
+          await emailSender.send(emailToSend);
         } catch (error) {
           console.error('Error sending expiration notice to user: ', user.id, error);
         }

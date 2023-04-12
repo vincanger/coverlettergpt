@@ -30,19 +30,15 @@ import { DeleteJob } from './components/AlertDialog';
 import { FiDelete } from 'react-icons/fi';
 
 function JobsPage() {
-  const [JobId, setJobId] = useState<string | null>(null);
+  const [jobId, setJobId] = useState<string>('');
   const [descriptionText, setDescriptionText] = useState<string | null>(null);
 
   const history = useHistory();
 
-  const { data: jobs, isLoading } = useQuery<unknown, Job[]>(getJobs);
-  const { data: coverLetter } = useQuery<{ id: string | null }, CoverLetter[]>(
-    getCoverLetters,
-    { id: JobId },
-    { enabled: !!JobId }
-  );
+  const { data: jobs, isLoading } = useQuery(getJobs);
+  const { data: coverLetter } = useQuery(getCoverLetters, { id: jobId }, { enabled: jobId.length > 0 });
 
-  const updateJobOptimistically = useAction<Pick<Job, 'id' | 'isCompleted'>, Job[]>(updateJob, {
+  const updateJobOptimistically = useAction(updateJob, {
     optimisticUpdates: [
       {
         getQuerySpecifier: () => [getJobs],
@@ -171,7 +167,7 @@ function JobsPage() {
       {descriptionText && (
         <DescriptionModal description={descriptionText} isOpen={desIsOpen} onOpen={desOnOpen} onClose={desOnClose} />
       )}
-      {JobId && <DeleteJob jobId={JobId} isOpen={deleteIsOpen} onOpen={deleteOnOpen} onClose={deleteOnClose} />}
+      <DeleteJob jobId={jobId} isOpen={deleteIsOpen} onOpen={deleteOnOpen} onClose={deleteOnClose} />
     </VStack>
   );
 }

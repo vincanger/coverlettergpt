@@ -2,16 +2,12 @@ import { GetCoverLetter, GetJobs, GetJob, GetUserInfo, GetCoverLetterCount } fro
 import { CoverLetter, Job, User } from '@wasp/entities';
 import HttpError from '@wasp/core/HttpError.js';
 
-export const getCoverLetter: GetCoverLetter<CoverLetter> = async ({ id }, context) => {
+export const getCoverLetter: GetCoverLetter<Pick<CoverLetter, 'id'> , CoverLetter> = async ({ id }, context) => {
   if (!context.user) {
-    return context.entities.CoverLetter.findFirst({
-      where: {
-        id,
-      },
-    });
+    throw new HttpError(401);
   }
 
-  return context.entities.CoverLetter.findFirst({
+  return context.entities.CoverLetter.findFirstOrThrow({
     where: {
       id,
       user: { id: context.user.id },
@@ -36,7 +32,7 @@ export const getCoverLetters: GetCoverLetter<GetCoverLetterArgs, CoverLetter[]> 
   });
 };
 
-export const getJobs: GetJobs<Job[]> = async (_args, context) => {
+export const getJobs: GetJobs<unknown, Job[]> = async (_args, context) => {
   if (!context.user) {
     throw new HttpError(401);
   }
@@ -54,12 +50,15 @@ export const getJobs: GetJobs<Job[]> = async (_args, context) => {
   });
 };
 
-export const getJob: GetJob<Job> = async ({ id }, context) => {
+type GetJobArgs = { id: string };
+type GetJobResult = (Job & { coverLetter: CoverLetter[] });
+
+export const getJob: GetJob<GetJobArgs, GetJobResult> = async ({ id }, context) => {
   if (!context.user) {
     throw new HttpError(401);
   }
-
-  return context.entities.Job.findFirst({
+  
+  return context.entities.Job.findFirstOrThrow({
     where: {
       id,
       user: { id: context.user.id },
@@ -70,12 +69,12 @@ export const getJob: GetJob<Job> = async ({ id }, context) => {
   });
 };
 
-export const getUserInfo: GetUserInfo<Pick<User, 'id' | 'email' | 'hasPaid' | 'notifyPaymentExpires' | 'credits'> & { letters: CoverLetter[] }> = async (_args, context) => {
+export const getUserInfo: GetUserInfo<Pick<User, 'id'> | null, Pick<User, 'id' | 'email' | 'hasPaid' | 'notifyPaymentExpires' | 'credits'> & { letters: CoverLetter[] }> = async (_args, context) => {
   if (!context.user) {
     throw new HttpError(401);
   }
 
-  return context.entities.User.findFirst({
+  return context.entities.User.findUniqueOrThrow({
     where: {
       id: context.user.id,
     },
@@ -90,6 +89,6 @@ export const getUserInfo: GetUserInfo<Pick<User, 'id' | 'email' | 'hasPaid' | 'n
   });
 };
 
-export const getCoverLetterCount: GetCoverLetterCount<number> = async (_args, context) => {
+export const getCoverLetterCount: GetCoverLetterCount<unknown, number> = async (_args, context) => {
   return context.entities.CoverLetter.count();
 }
