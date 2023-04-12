@@ -11,6 +11,8 @@ After cloning this repo, you can run it locally by following these steps:
 4. Run `wasp db migrate-dev`
 5. Run `wasp start`
 6. Go to `localhost:3000` in your browser (your NodeJS server will be running on port `3001`)
+and
+7. install the [Wasp extension for VSCode](https://marketplace.visualstudio.com/items?itemName=wasp-lang.wasp) for the best DX
 
 ## How it works
 
