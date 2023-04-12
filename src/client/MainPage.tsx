@@ -29,9 +29,9 @@ import { useState, useEffect, useRef } from 'react';
 import { ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@wasp/queries';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { CoverLetter, Job } from '@wasp/entities';
-import type { CoverLetterPayload, JobPayload } from './types';
+import type { CoverLetterPayload } from './types';
 import getJob from '@wasp/queries/getJob';
 import getCoverLetterCount from '@wasp/queries/getCoverLetterCount';
 import generateCoverLetter from '@wasp/actions/generateCoverLetter';
@@ -77,7 +77,6 @@ function MainPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-
     if (jobIdParam) {
       setJobToFetch(jobIdParam);
       setIsCoverLetterUpdate(true);

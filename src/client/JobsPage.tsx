@@ -21,7 +21,7 @@ import { OptimisticUpdateDefinition, useAction } from '@wasp/actions';
 import getJobs from '@wasp/queries/getJobs';
 import getCoverLetters from '@wasp/queries/getCoverLetters';
 import updateJob from '@wasp/actions/updateJob';
-import { CoverLetter, Job } from '@wasp/entities';
+import { Job } from '@wasp/entities';
 import ModalElement from './components/Modal';
 import DescriptionModal from './components/DescriptionModal';
 import BorderBox from './components/BorderBox';
