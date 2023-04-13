@@ -47,6 +47,7 @@ export function EditPopover({ setTooltip, selectedText, user, ...props }: EditPo
       }, 750);
 
       const newValue = await generateEdit({ content: selectString, improvement });
+      
       clearInterval(loadingInterval);
       setTextareaState(value);
 

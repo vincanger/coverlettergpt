@@ -1,6 +1,6 @@
 import { ChakraProvider, VStack, Box } from '@chakra-ui/react';
 import { theme } from './theme';
-import { ReactNode, useState, useEffect, useRef, createContext } from 'react';
+import { ReactNode, useState, useEffect, createContext } from 'react';
 import NavBar from './components/NavBar';
 import { CallToAction } from './components/CallToAction';
 import { EditPopover } from './components/Popover';

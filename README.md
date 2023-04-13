@@ -7,7 +7,7 @@ After cloning this repo, you can run it locally by following these steps:
 
 1. Install [Wasp](https://wasp-lang.dev) by running `curl -sSL https://get.wasp-lang.dev/installer.sh | sh` in your terminal.
 2. Create a `.env.server` file in the root of the project
-3. Copy the `env.example` file contents to `.env.server` and fill in your API keys
+3. Copy the `env.server.example` file contents to `.env.server` and fill in your API keys
 4. Make sure you have a Database connected and running. Here are two quick options:
   - run `wasp start db` from the project root. You need to have Docker installed (if not, on MacOS run `brew install docker-machine docker` and start the Docker app). This will start a Postgres database and configure it for you. No need to do anything else!
   - or provision a Postgres database on [Railway](https://railway.app), go to settings and copy the connection url. Paste it as DATABASE_URL=<your-postgres-connection-url> into your env.server file.
