@@ -40,7 +40,7 @@ import updateCoverLetter from '@wasp/actions/updateCoverLetter';
 import useAuth from '@wasp/auth/useAuth';
 
 function MainPage() {
-  const [pdfText, setPdfText] = useState<string | null>(null);
+  const [isPdfReady, setIsPdfReady] = useState<boolean>(false);
   const [jobToFetch, setJobToFetch] = useState<string>('');
   const [isCoverLetterUpdate, setIsCoverLetterUpdate] = useState<boolean>(false);
   const [isCompleteCoverLetter, setIsCompleteCoverLetter] = useState<boolean>(true);
@@ -112,7 +112,8 @@ function MainPage() {
     if (event.target.files == null) return;
     if (event.target.files.length == 0) return;
 
-    setPdfText(null);
+    setValue('pdf', null);
+    setIsPdfReady(false);
     const pdfFile = event.target.files[0];
 
     // Read the file using file reader
@@ -146,7 +147,7 @@ function MainPage() {
               .join(' ');
             textBuilder += text;
           }
-          setPdfText(textBuilder);
+          setIsPdfReady(true);
           setValue('pdf', textBuilder);
           clearErrors('pdf');
         })
@@ -175,7 +176,7 @@ function MainPage() {
     }
 
     try {
-      const job = (await createJob(values)) as Job;
+      const job = await createJob(values);
 
       const creativityValue = convertToSliderValue(sliderValue);
 
@@ -190,7 +191,9 @@ function MainPage() {
       };
 
       setLoadingText();
-      const coverLetter = (await generateCoverLetter(payload)) as CoverLetter;
+
+      const coverLetter = await generateCoverLetter(payload);
+      
       history.push(`/cover-letter/${coverLetter.id}`);
     } catch (error: any) {
       alert(`${error?.message ?? 'Something went wrong, please try again'}`);
@@ -216,22 +219,19 @@ function MainPage() {
 
       const creativityValue = convertToSliderValue(sliderValue);
       let payload;
-      if (!pdfText) {
-        throw new Error('Please upload a pdf file');
-      } else {
-        payload = {
-          id: job.id,
-          description: values.description,
-          content: values.pdf,
-          isCompleteCoverLetter,
-          temperature: creativityValue,
-          includeWittyRemark: values.includeWittyRemark,
-        };
-      }
+
+      payload = {
+        id: job.id,
+        description: values.description,
+        content: values.pdf,
+        isCompleteCoverLetter,
+        temperature: creativityValue,
+        includeWittyRemark: values.includeWittyRemark,
+      };
 
       setLoadingText();
 
-      const updatedJob = (await updateCoverLetter(payload)) as Job & { coverLetter: CoverLetter[] };
+      const updatedJob = await updateCoverLetter(payload);
 
       if (updatedJob.coverLetter.length === 0) {
         throw new Error('Cover letter not found');
@@ -409,7 +409,7 @@ function MainPage() {
                         Upload CV
                       </Button>
                     </FormLabel>
-                    {pdfText && <Text fontSize={'sm'}>👍 uploaded</Text>}
+                    {isPdfReady && <Text fontSize={'sm'}>👍 uploaded</Text>}
                     <FormErrorMessage>{formErrors.pdf && formErrors.pdf.message}</FormErrorMessage>
                   </HStack>
                   <FormHelperText mt={0.5} fontSize={'xs'}>

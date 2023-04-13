@@ -35,7 +35,7 @@ function JobsPage() {
 
   const history = useHistory();
 
-  const { data: jobs, isLoading } = useQuery(getJobs);
+  const { data: jobs, isLoading, error } = useQuery(getJobs);
   const { data: coverLetter } = useQuery(getCoverLetters, { id: jobId }, { enabled: jobId.length > 0 });
 
   const updateJobOptimistically = useAction(updateJob, {
