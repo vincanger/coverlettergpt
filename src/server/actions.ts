@@ -403,7 +403,7 @@ function dontUpdateUser(user: UserWithoutPassword): Promise<UserWithoutPassword>
   });
 }
 
-export const updateUserHasPaid: UpdateUserHasPaid<unknown, UpdateUserResult | UserWithoutPassword> = async (
+export const updateUserHasPaid: UpdateUserHasPaid<never, UpdateUserResult | UserWithoutPassword> = async (
   _args,
   context
 ) => {
