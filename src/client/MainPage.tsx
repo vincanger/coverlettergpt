@@ -30,7 +30,6 @@ import { ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@wasp/queries';
 import { useHistory } from 'react-router-dom';
-import { CoverLetter, Job } from '@wasp/entities';
 import type { CoverLetterPayload } from './types';
 import getJob from '@wasp/queries/getJob';
 import getCoverLetterCount from '@wasp/queries/getCoverLetterCount';
