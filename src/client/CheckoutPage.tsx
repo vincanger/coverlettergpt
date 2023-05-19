@@ -12,7 +12,7 @@ type UpdateUserResult = Pick<User, 'id' | 'email' | 'hasPaid'>;
 export default function CheckoutPage({ user }: { user: User }) {
   const [hasPaid, setHasPaid] = useState('loading');
 
-  const { data: userInfo } = useQuery<{ id: number | null }, UpdateUserResult & { letters: [] }>(getUserInfo, {
+  const { data: userInfo } = useQuery(getUserInfo, {
     id: user.id,
   });
 
