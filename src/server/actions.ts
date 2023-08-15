@@ -391,6 +391,7 @@ export const updateUser: UpdateUser<UpdateUserArgs, UserWithoutPassword> = async
       checkoutSessionId: true,
       stripeId: true,
       credits: true,
+      gptModel: true,
     },
   });
 };

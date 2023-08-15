@@ -8,9 +8,22 @@ import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 
 type UpdateUserResult = Pick<User, 'id' | 'email' | 'hasPaid'>;
+type PaymentStatus = 'paid' | 'canceled' | 'error' | 'loading';
+const getHeadingText = (status: PaymentStatus): string => {
+  switch (status) {
+    case 'paid':
+      return 'Payment Successful!';
+    case 'canceled':
+      return 'Payment Canceled';
+    case 'error':
+      return 'Payment Error';
+    default:
+      return 'loading';
+  }
+};
 
 export default function CheckoutPage({ user }: { user: User }) {
-  const [hasPaid, setHasPaid] = useState('loading');
+  const [hasPaid, setHasPaid] = useState<PaymentStatus>('loading');
 
   const { data: userInfo } = useQuery(getUserInfo, {
     id: user.id,
@@ -29,7 +42,7 @@ export default function CheckoutPage({ user }: { user: User }) {
       }, 4000);
     }
     async function callUpdateUser(): Promise<void> {
-      const updatedUser = await updateUserHasPaid() as UpdateUserResult;
+      const updatedUser = (await updateUserHasPaid()) as UpdateUserResult;
       if (updatedUser?.hasPaid) {
         setHasPaid('paid');
       } else {
@@ -56,19 +69,11 @@ export default function CheckoutPage({ user }: { user: User }) {
 
   return (
     <BorderBox>
-      <Heading>
-        {hasPaid === 'paid'
-          ? '🥳 Payment Successful!'
-          : hasPaid === 'canceled'
-          ? '😢 Payment Canceled'
-          : hasPaid === 'error' && '🙄 Payment Error'}
-      </Heading>
-      {hasPaid === 'loading' && <Spinner />}
-      {hasPaid !== 'loading' && (
-        <Text textAlign='center'>
-          You are being redirected to your profile page... <br />
-        </Text>
-      )}
+      <Heading>{getHeadingText(hasPaid)}</Heading>
+
+      <Text textAlign='center'>
+        You are being redirected to your profile page... <br />
+      </Text>
     </BorderBox>
   );
 }

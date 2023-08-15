@@ -1,6 +1,6 @@
 app applyai {
   wasp: {
-    version: "^0.10.0"
+    version: "^0.11.1"
   },
   title: "CoverLetterGPT",
   head: [
@@ -38,7 +38,7 @@ app applyai {
   },
   dependencies: [
     ("node-fetch", "3.3.0"),
-    ("@chakra-ui/react", "1.8.8"),
+    ("@chakra-ui/react", "2.8.0"),
     ("react-icons", "4.8.0"),
     ("@emotion/react", "11.10.6"),
     ("@emotion/styled", "11.10.6"),
@@ -47,6 +47,8 @@ app applyai {
     ("pdfjs-dist", "3.3.122"),
     ("@types/pdfjs-dist", "2.10.378"),
     ("stripe", "11.15.0"),
+    ("lnurl", "0.24.2"),
+    ("jsonwebtoken", "^8.5.1")
   ],
 
 }
@@ -58,9 +60,10 @@ app applyai {
 entity User {=psl
   id                        Int                  @id @default(autoincrement())
   username                  String               @unique
-  password                  String
+  password                  String?
   email                     String?
   hasPaid                   Boolean              @default(false)
+  gptModel                  String               @default("gpt3.5")
   datePaid                  DateTime?
   stripeId                  String? 
   checkoutSessionId         String?
@@ -69,6 +72,7 @@ entity User {=psl
   letters                   CoverLetter[]
   jobs                      Job[]
   externalAuthAssociations  SocialLogin[]
+  lnData                    LnData?
 psl=}
 
 entity SocialLogin {=psl
@@ -79,6 +83,17 @@ entity SocialLogin {=psl
   userId                    Int
   createdAt                 DateTime              @default(now())
   @@unique([provider, providerId, userId])
+psl=}
+
+entity LnData {=psl
+  id                        String                @id @default(uuid())
+  user                      User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                    Int?                  @unique
+  loginUrl                  String?               @unique
+  k1Hash                    String                @unique
+  token                     String?  
+  createdAt                 DateTime              @default(now())
+  updatedAt                 DateTime?             @updatedAt
 psl=}
 
 entity CoverLetter {=psl
@@ -206,6 +221,11 @@ action stripeCreditsPayment {
   entities: [User]
 }
 
+action getLnLoginUrl {
+  fn: import { getLnLoginUrl } from "@server/ln.js",
+  entities: [User, LnData]
+}
+
 // 📚 Queries
 
 query getJobs {
@@ -233,6 +253,11 @@ query getUserInfo {
   entities: [User]
 }
 
+query getLnUserInfo {
+  fn: import { getLnUserInfo } from "@server/ln.js",
+  entities: [User, LnData]
+}
+
 query getCoverLetterCount {
   fn: import { getCoverLetterCount } from "@server/queries.js",
   entities: [CoverLetter]
@@ -246,6 +271,12 @@ api stripeWebhook {
   fn: import { stripeWebhook } from "@server/webhooks.js",
   entities: [User],
   httpRoute: (POST, "/stripe-webhook")
+}
+
+api lnLogin {
+  fn: import { lnLogin } from "@server/ln.js",
+  entities: [User, LnData],
+  httpRoute: (GET, "/ln-login")
 }
 
 /* 🕵️‍♂️ These are the Wasp Cron Jobs. Use them to set up recurring tasks or queues:

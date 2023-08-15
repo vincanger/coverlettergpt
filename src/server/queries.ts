@@ -32,7 +32,7 @@ export const getCoverLetters: GetCoverLetter<GetCoverLetterArgs, CoverLetter[]> 
   });
 };
 
-export const getJobs: GetJobs<unknown, Job[]> = async (_args, context) => {
+export const getJobs: GetJobs<void, Job[]> = async (_args, context) => {
   if (!context.user) {
     throw new HttpError(401);
   }
@@ -89,6 +89,7 @@ export const getUserInfo: GetUserInfo<Pick<User, 'id'> | null, Pick<User, 'id' |
   });
 };
 
-export const getCoverLetterCount: GetCoverLetterCount<unknown, number> = async (_args, context) => {
+
+export const getCoverLetterCount: GetCoverLetterCount<void, number> = async (_args, context) => {
   return context.entities.CoverLetter.count();
 }

@@ -90,50 +90,80 @@ export default function ProfilePage({ user }: { user: User }) {
             </HStack>
           )}
           {!userInfo.hasPaid && (
-            <HStack py={5} gap={5} display='grid' gridTemplateColumns='1fr 1fr'>
-              <VStack
-                layerStyle='card'
-                py={5}
-                px={7}
-                gap={3}
-                height='100%'
-                width='100%'
-                justifyContent='space-between'
-                alignItems='center'
-              >
-                <VStack gap={3} alignItems='start'>
-                  <Heading size='xl'>$2.95</Heading>
-                  <Text textAlign='start' fontSize='md'>
-                    10 Cover <br />
-                    Letters
-                  </Text>
-                </VStack>
-                <Button mr={3} isLoading={isCreditsLoading} onClick={handleCreditsClick}>
-                  Buy Now
-                </Button>
+            <VStack py={3} gap={5}>
+              <VStack py={3} gap={2}>
+                <HStack gap={5} display='grid' gridTemplateColumns='1fr 1fr'>
+                  {/* <VStack
+                    layerStyle='card'
+                    py={5}
+                    px={7}
+                    gap={3}
+                    height='100%'
+                    width='100%'
+                    justifyContent='space-between'
+                    alignItems='center'
+                  >
+                    <VStack gap={3} alignItems='start'>
+                      <Heading size='xl'>$2.95</Heading>
+                      <Text textAlign='start' fontSize='md'>
+                        10 Cover <br />
+                        Letters
+                      </Text>
+                    </VStack>
+                    <Button mr={3} isLoading={isCreditsLoading} onClick={handleCreditsClick}>
+                      Buy Now
+                    </Button>
+                  </VStack> */}
+                  <VStack
+                    layerStyle='card'
+                    py={5}
+                    px={7}
+                    gap={3}
+                    height='100%'
+                    width='100%'
+                    justifyContent='space-between'
+                    alignItems='center'
+                  >
+                    <VStack gap={3} alignItems='start'>
+                      <Heading size='xl'>$4.95</Heading>
+                      <Text textAlign='start' fontSize='md'>
+                        Unlimited
+                        <br />
+                        monthly subscription
+                      </Text>
+                      <Heading size='md'>Using GPT-3 🦾</Heading>
+                    </VStack>
+                    <Button mr={3} isLoading={isLoading} onClick={handleClick}>
+                      Buy Now!
+                    </Button>
+                  </VStack>
+                  <VStack
+                    layerStyle='cardMd'
+                    borderColor={'purple.200'}
+                    borderWidth={3}
+                    py={5}
+                    px={7}
+                    gap={3}
+                    height='100%'
+                    width='100%'
+                    justifyContent='space-between'
+                    alignItems='center'
+                  >
+                    <VStack gap={3} alignItems='start'>
+                      <Heading size='xl'>$11.95</Heading>
+
+                      <Text textAlign='start' fontSize='md'>
+                        Unlimited <br /> monthly subscription
+                      </Text>
+                      <Heading size='md'>Using GPT-4 🤖</Heading>
+                    </VStack>
+                    <Button colorScheme='purple' mr={3} isLoading={isLoading} onClick={handleClick}>
+                      💰 Buy Now!
+                    </Button>
+                  </VStack>
+                </HStack>
               </VStack>
-              <VStack
-                layerStyle='cardMd'
-                py={5}
-                px={7}
-                gap={3}
-                height='100%'
-                width='100%'
-                justifyContent='space-between'
-                alignItems='center'
-              >
-                <VStack gap={3} alignItems='start'>
-                  <Heading size='xl'>$4.95</Heading>
-                  <Text textAlign='start' fontSize='md'>
-                    Unlimited <br />
-                    for 3 months
-                  </Text>
-                </VStack>
-                <Button colorScheme='purple' mr={3} isLoading={isLoading} onClick={handleClick}>
-                  💰 Buy Now!
-                </Button>
-              </VStack>
-            </HStack>
+            </VStack>
           )}
           <Button alignSelf='flex-end' size='sm' onClick={() => logout()}>
             Logout
