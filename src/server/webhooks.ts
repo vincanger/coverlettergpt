@@ -13,29 +13,6 @@ export const stripeWebhook: StripeWebhook = async (request, response, context) =
   const session = event.data.object as Stripe.Checkout.Session;
   userStripeId = session.customer as string;
 
-  // if (event.type === 'payment_intent.succeeded') {
-  //   const paymentIntent = event.data.object as Stripe.PaymentIntent;
-  //   console.log('PaymentIntent was successful!', paymentIntent.customer);
-  //   userStripeId = paymentIntent.customer as string;
-  //   if (paymentIntent.amount === 295) {
-  //     try {
-  //       console.log('paymentIntent.amount', paymentIntent.amount);
-  //       await context.entities.User.updateMany({
-  //         where: {
-  //           stripeId: userStripeId,
-  //         },
-  //         data: {
-  //           credits: {
-  //             increment: 10,
-  //           },
-  //         },
-  //       });
-  //     } catch (error) {
-  //       console.log('error', error);
-  //     }
-  //   }
-  // }
-
   try {
     const { line_items } = await stripe.checkout.sessions.retrieve(session.id, {
       expand: ['line_items'],
@@ -51,6 +28,20 @@ export const stripeWebhook: StripeWebhook = async (request, response, context) =
         },
         data: {
           hasPaid: true,
+          gptModel: 'gpt-4',
+          datePaid: new Date(),
+        },
+      });
+    } else if (line_items?.data[0]?.price?.id === process.env.PRODUCT_PRICE_ID) {
+      console.log('GPT3.5-turbo Subscription purchased');
+      await context.entities.User.updateMany({
+        where: {
+          stripeId: userStripeId,
+        },
+        data: {
+          hasPaid: true,
+          datePaid: new Date(),
+          gptModel: 'gpt-3.5-turbo',
         },
       });
     } else if (line_items?.data[0]?.price?.id === process.env.PRODUCT_CREDITS_PRICE_ID) {
@@ -63,6 +54,7 @@ export const stripeWebhook: StripeWebhook = async (request, response, context) =
           credits: {
             increment: 10,
           },
+          gptModel: 'gpt-3.5-turbo',
         },
       });
     } else if (event.type === 'customer.subscription.updated') {

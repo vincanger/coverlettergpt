@@ -69,7 +69,7 @@ export const getJob: GetJob<GetJobArgs, GetJobResult> = async ({ id }, context) 
   });
 };
 
-export const getUserInfo: GetUserInfo<Pick<User, 'id'> | null, Pick<User, 'id' | 'email' | 'hasPaid' | 'notifyPaymentExpires' | 'credits'> & { letters: CoverLetter[] }> = async (_args, context) => {
+export const getUserInfo: GetUserInfo<Pick<User, 'id'> | null, Pick<User, 'id' | 'email' | 'hasPaid' | 'notifyPaymentExpires' | 'credits' | 'gptModel' | 'isUsingLn'> & { letters: CoverLetter[] }> = async (_args, context) => {
   if (!context.user) {
     throw new HttpError(401);
   }
@@ -85,6 +85,8 @@ export const getUserInfo: GetUserInfo<Pick<User, 'id'> | null, Pick<User, 'id' |
       hasPaid: true,
       notifyPaymentExpires: true,
       credits: true,
+      gptModel: true,
+      isUsingLn: true,
     },
   });
 };

@@ -1,5 +1,6 @@
 export const LIGHTNING_ADDRESS = 'vince@getalby.com';
 
+// export const MILLISATS_PER_MESSAGE = 10000;
 export const MILLISATS_PER_MESSAGE = 30000;
 
 const getBitcoinPrice = async () => {

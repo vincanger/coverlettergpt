@@ -1,5 +1,5 @@
 import { randomBytes, createHash as cryptoCreateHash } from 'crypto';
-import type { GetLnLoginUrl } from '@wasp/actions/types';
+import type { GetLnLoginUrl, DecodeInvoice, LnPaymentStatus } from '@wasp/actions/types';
 import type { GetLnUserInfo } from '@wasp/queries/types';
 //@ts-ignore
 import lnurl from 'lnurl';
@@ -7,6 +7,8 @@ import lnurl from 'lnurl';
 import jwt from 'jsonwebtoken';
 import type { LnLogin } from '@wasp/apis/types';
 import { LnData } from '@wasp/entities';
+import bolt11 from 'bolt11';
+import HttpError from '@wasp/core/HttpError.js';
 
 const DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -91,6 +93,8 @@ export const lnLogin: LnLogin = async (request, response, context) => {
     create: {
       username: key,
       password: createHash(key + sig),
+      isUsingLn: true,
+      gptModel: 'gpt-4',
       lnData: {
         connect: {
           k1Hash: storedK1.k1Hash,
@@ -107,13 +111,11 @@ export const lnLogin: LnLogin = async (request, response, context) => {
     include: {
       lnData: true,
     },
-
-    
   });
 
   const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!);
 
- const lnData = await context.entities.LnData.update({
+  const lnData = await context.entities.LnData.update({
     where: {
       userId: user.id,
     },
@@ -133,4 +135,45 @@ export const getLnUserInfo: GetLnUserInfo<string, LnData> = async (k1Hash, conte
       k1Hash: k1Hash,
     },
   });
+};
+
+type DecodedInvoice = bolt11.PaymentRequestObject & {
+  tagsObject: bolt11.TagsObject;
+};
+
+export const decodeInvoice: DecodeInvoice<string, DecodedInvoice> = async (pr, _context) => {
+  const invoice = bolt11.decode(pr);
+  return invoice;
+};
+
+type LightningInvoice = {
+  status: string;
+  successAction: {
+    tag: string;
+    message: string;
+  };
+  verify: string;
+  pr: string;
+};
+
+export const lnPaymentStatus: LnPaymentStatus<LightningInvoice, string> = async (invoice, context) => {
+  if (!context.user) {
+    throw new HttpError(401);
+  }
+
+  const updatedInvoice = await context.entities.LnPayment.upsert({
+    where: {
+      pr: invoice.pr,
+    },
+    create: {
+      pr: invoice.pr,
+      status: invoice.status,
+      userId: context.user.id,
+    },
+    update: {
+      status: invoice.status,
+    },
+  });
+
+  return updatedInvoice.status;
 };

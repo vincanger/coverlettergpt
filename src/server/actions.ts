@@ -12,6 +12,7 @@ import type {
   UpdateUserHasPaid,
   DeleteJob,
   StripePayment,
+  StripeGpt4Payment,
   StripeCreditsPayment,
 } from '@wasp/actions/types';
 import Stripe from 'stripe';
@@ -25,12 +26,12 @@ const DOMAIN = process.env.WASP_WEB_CLIENT_URL || 'http://localhost:3000';
 const gptConfig = {
   completeCoverLetter: `You are a cover letter generator.
 You will be given a job description along with the job applicant's resume.
-You will write a cover letter for the applicant that matches their past experiences from the resume with the job description.
+You will write a cover letter for the applicant that matches their past experiences from the resume with the job description. Write the cover letter in the same language as the job description provided!
 Rather than simply outlining the applicant's past experiences, you will give more detail and explain how those experiences will help the applicant succeed in the new job.
 You will write the cover letter in a modern, professional style without being too formal, as a modern employee might do naturally.`,
   coverLetterWithAWittyRemark: `You are a cover letter generator.
 You will be given a job description along with the job applicant's resume.
-You will write a cover letter for the applicant that matches their past experiences from the resume with the job description.
+You will write a cover letter for the applicant that matches their past experiences from the resume with the job description. Write the cover letter in the same language as the job description provided!
 Rather than simply outlining the applicant's past experiences, you will give more detail and explain how those experiences will help the applicant succeed in the new job.
 You will write the cover letter in a modern, relaxed style, as a modern employee might do naturally.
 Include a job related joke at the end of the cover letter.`,
@@ -86,7 +87,7 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
   }
 
   const payload = {
-    model: 'gpt-3.5-turbo',
+    model: context.user.gptModel,
     messages: [
       {
         role: 'system',
@@ -104,7 +105,7 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
   let json: OpenAIResponse;
 
   try {
-    if (!context.user.hasPaid && !context.user.credits) {
+    if (!context.user.hasPaid && !context.user.credits && !context.user.isUsingLn) {
       throw new HttpError(402, 'User has not paid or is out of credits');
     } else if (context.user.credits && !context.user.hasPaid) {
       console.log('decrementing credits \n\n');
@@ -167,11 +168,11 @@ export const generateEdit: GenerateEdit<{ content: string; improvement: string }
 
   let command;
   let tokenNumber;
-  command = `You are a cover letter editor. You will be given a piece of isolated text from within a cover letter and told how you can improve it. Only respond with the revision.`;
+  command = `You are a cover letter editor. You will be given a piece of isolated text from within a cover letter and told how you can improve it. Only respond with the revision. Make sure the revision is in the same language as the given isolated text.`;
   tokenNumber = 1000;
 
   const payload = {
-    model: 'gpt-3.5-turbo',
+    model: context.user.gptModel,
     messages: [
       {
         role: 'system',
@@ -392,6 +393,7 @@ export const updateUser: UpdateUser<UpdateUserArgs, UserWithoutPassword> = async
       stripeId: true,
       credits: true,
       gptModel: true,
+      isUsingLn: true,
     },
   });
 };
@@ -469,7 +471,64 @@ export const stripePayment: StripePayment<void, StripePaymentResult> = async (_a
         quantity: 1,
       },
     ],
-    mode: 'payment',
+    mode: 'subscription',
+    success_url: `${DOMAIN}/checkout?success=true`,
+    cancel_url: `${DOMAIN}/checkout?canceled=true`,
+    automatic_tax: { enabled: true },
+    customer_update: {
+      address: 'auto',
+    },
+    customer: customer.id,
+  });
+
+  await context.entities.User.update({
+    where: {
+      id: context.user.id,
+    },
+    data: {
+      checkoutSessionId: session?.id ?? null,
+      stripeId: customer.id ?? null,
+    },
+  });
+
+  return new Promise((resolve, reject) => {
+    if (!session) {
+      reject(new HttpError(402, 'Could not create a Stripe session'));
+    } else {
+      resolve({
+        sessionUrl: session.url,
+        sessionId: session.id,
+      });
+    }
+  });
+};
+
+export const stripeGpt4Payment: StripeGpt4Payment<void, StripePaymentResult> = async (_args, context) => {
+  if (!context.user || !context.user.email) {
+    throw new HttpError(401, 'User or email not found');
+  }
+  let customer: Stripe.Customer;
+  const stripeCustomers = await stripe.customers.list({
+    email: context.user.email,
+  });
+  if (!stripeCustomers.data.length) {
+    console.log('creating customer');
+    customer = await stripe.customers.create({
+      email: context.user.email,
+    });
+  } else {
+    console.log('using existing customer');
+    customer = stripeCustomers.data[0];
+  }
+
+  const session: Stripe.Checkout.Session = await stripe.checkout.sessions.create({
+    line_items: [
+      {
+        price: process.env.GPT4_PRICE_ID!,
+        quantity: 1,
+      },
+    ],
+    mode: 'subscription',
     success_url: `${DOMAIN}/checkout?success=true`,
     cancel_url: `${DOMAIN}/checkout?canceled=true`,
     automatic_tax: { enabled: true },

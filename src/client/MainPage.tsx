@@ -37,6 +37,10 @@ import generateCoverLetter from '@wasp/actions/generateCoverLetter';
 import createJob from '@wasp/actions/createJob';
 import updateCoverLetter from '@wasp/actions/updateCoverLetter';
 import useAuth from '@wasp/auth/useAuth';
+import LnPaymentModal from './components/LnPaymentModal';
+import { fetchLightningInvoice, payLightningInvoice } from './lightningUtils';
+import type { LightningInvoice } from './lightningUtils';
+import lnPaymentStatus from '@wasp/actions/lnPaymentStatus';
 
 function MainPage() {
   const [isPdfReady, setIsPdfReady] = useState<boolean>(false);
@@ -45,6 +49,7 @@ function MainPage() {
   const [isCompleteCoverLetter, setIsCompleteCoverLetter] = useState<boolean>(true);
   const [sliderValue, setSliderValue] = useState(30);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [lightningInvoice, setLightningInvoice] = useState<LightningInvoice | null>(null);
 
   const { data: user, isLoading: isUserLoading } = useAuth();
 
@@ -71,6 +76,7 @@ function MainPage() {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: loginIsOpen, onOpen: loginOnOpen, onClose: loginOnClose } = useDisclosure();
+  const { isOpen: lnPaymentIsOpen, onOpen: lnPaymentOnOpen, onClose: lnPaymentOnClose } = useDisclosure();
 
   const loadingTextRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -164,7 +170,7 @@ function MainPage() {
   }
 
   async function onSubmit(values: any): Promise<void> {
-    const canUserContinue = checkUsageNumbers();
+    let canUserContinue = checkUsageNumbers();
     if (!user) {
       history.push('/login');
       return;
@@ -172,6 +178,28 @@ function MainPage() {
     if (!canUserContinue) {
       history.push('/profile');
       return;
+    }
+    if (user.isUsingLn && user.credits === 0) {
+      const invoice = await fetchLightningInvoice();
+      if (invoice) {
+        invoice.status = 'pending';
+        await lnPaymentStatus(invoice);
+        setLightningInvoice(invoice);
+        lnPaymentOnOpen();
+      } else {
+        alert('Something went wrong, please try again');
+        return;
+      }
+
+      let status = invoice.status;
+      while (status === 'pending') {
+        status = await lnPaymentStatus(invoice);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+      if (status !== 'success') {
+        alert('Something went wrong, please try again');
+        return;
+      }
     }
 
     try {
@@ -192,7 +220,7 @@ function MainPage() {
       setLoadingText();
 
       const coverLetter = await generateCoverLetter(payload);
-      
+
       history.push(`/cover-letter/${coverLetter.id}`);
     } catch (error: any) {
       alert(`${error?.message ?? 'Something went wrong, please try again'}`);
@@ -263,9 +291,12 @@ function MainPage() {
   }
 
   function checkUsageNumbers(): Boolean {
-    // TODO: add check for number of credits
     if (user) {
-      if (!user.hasPaid && user.credits > 0) {
+      if (user.isUsingLn) {
+        console.log('user is using ln');
+        return true;
+      }
+      if (!user.hasPaid && !user.isUsingLn && user.credits > 0) {
         if (user.credits < 3) {
           onOpen();
         }
@@ -328,7 +359,7 @@ function MainPage() {
                   }}
                   disabled={isCoverLetterUpdate}
                 />
-                <FormErrorMessage>{formErrors.title && formErrors.title.message}</FormErrorMessage>
+                <FormErrorMessage>{!!formErrors.title && formErrors.title.message?.toString()}</FormErrorMessage>
               </FormControl>
               <FormControl isInvalid={!!formErrors.company}>
                 <Input
@@ -344,7 +375,7 @@ function MainPage() {
                   })}
                   disabled={isCoverLetterUpdate}
                 />
-                <FormErrorMessage>{formErrors.company && formErrors.company.message}</FormErrorMessage>
+                <FormErrorMessage>{!!formErrors.company && formErrors.company.message?.toString()}</FormErrorMessage>
               </FormControl>
               <FormControl isInvalid={!!formErrors.location}>
                 <Input
@@ -360,7 +391,7 @@ function MainPage() {
                   })}
                   disabled={isCoverLetterUpdate}
                 />
-                <FormErrorMessage>{formErrors.location && formErrors.location.message}</FormErrorMessage>
+                <FormErrorMessage>{!!formErrors.location && formErrors.location.message?.toString()}</FormErrorMessage>
               </FormControl>
               <FormControl isInvalid={!!formErrors.description}>
                 <Textarea
@@ -371,7 +402,9 @@ function MainPage() {
                     required: 'This is required',
                   })}
                 />
-                <FormErrorMessage>{formErrors.description && formErrors.description.message}</FormErrorMessage>
+                <FormErrorMessage>
+                  {!!formErrors.description && formErrors.description.message?.toString()}
+                </FormErrorMessage>
               </FormControl>
               <FormControl isInvalid={!!formErrors.pdf}>
                 <Input
@@ -409,7 +442,7 @@ function MainPage() {
                       </Button>
                     </FormLabel>
                     {isPdfReady && <Text fontSize={'sm'}>👍 uploaded</Text>}
-                    <FormErrorMessage>{formErrors.pdf && formErrors.pdf.message}</FormErrorMessage>
+                    <FormErrorMessage>{!!formErrors.pdf && formErrors.pdf.message?.toString()}</FormErrorMessage>
                   </HStack>
                   <FormHelperText mt={0.5} fontSize={'xs'}>
                     Upload a PDF only of Your CV/Resumé
@@ -525,6 +558,11 @@ function MainPage() {
       </BorderBox>
       <LeaveATip isOpen={isOpen} onOpen={onOpen} onClose={onClose} credits={user?.credits || 0} />
       <LoginToBegin isOpen={loginIsOpen} onOpen={loginOnOpen} onClose={loginOnClose} />
+      <LnPaymentModal
+        isOpen={lnPaymentIsOpen}
+        onClose={lnPaymentOnClose}
+        lightningInvoice={lightningInvoice}
+      />
     </>
   );
 }

@@ -6,18 +6,18 @@ import getUserInfo from '@wasp/queries/getUserInfo';
 import updateUser from '@wasp/actions/updateUser';
 import { useState } from 'react';
 import stripePayment from '@wasp/actions/stripePayment';
-import stripeCreditsPayment from '@wasp/actions/stripeCreditsPayment';
+import stripeGpt4Payment from '@wasp/actions/stripeGpt4Payment';
 import logout from '@wasp/auth/logout';
 import { useAction, OptimisticUpdateDefinition } from '@wasp/actions';
 
 export default function ProfilePage({ user }: { user: User }) {
   const [isLoading, setIsLoading] = useState(false);
-  const [isCreditsLoading, setIsCreditsLoading] = useState(false);
+  const [isGpt4loading, setIsGpt4Loading] = useState(false);
 
   const { data: userInfo } = useQuery(getUserInfo, { id: user.id });
 
   const userPaidOnDay = new Date(String(user.datePaid));
-  const threeMonthsFromDatePaid = new Date(userPaidOnDay.setMonth(userPaidOnDay.getMonth() + 3));
+  const oneMonthFromDatePaid = new Date(userPaidOnDay.setMonth(userPaidOnDay.getMonth() + 1));
 
   const updateUserOptimistically = useAction(updateUser, {
     optimisticUpdates: [
@@ -31,7 +31,7 @@ export default function ProfilePage({ user }: { user: User }) {
     ],
   });
 
-  async function handleClick() {
+  async function handleGpt3Click() {
     setIsLoading(true);
     try {
       const response = await stripePayment();
@@ -43,16 +43,16 @@ export default function ProfilePage({ user }: { user: User }) {
     setIsLoading(false);
   }
 
-  async function handleCreditsClick() {
-    setIsCreditsLoading(true);
+  async function handleGpt4Click() {
+    setIsGpt4Loading(true);
     try {
-      const response = await stripeCreditsPayment();
+      const response = await stripeGpt4Payment();
       const url = response.sessionUrl;
       if (url) window.open(url, '_self');
     } catch (error) {
       alert('Something went wrong. Please try again');
     }
-    setIsCreditsLoading(false);
+    setIsGpt4Loading(false);
   }
 
   async function handleCheckboxChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -63,15 +63,15 @@ export default function ProfilePage({ user }: { user: User }) {
     <BorderBox>
       {!!userInfo ? (
         <>
-          <Heading size='md'>👋 Hi {userInfo.email} </Heading>
+          <Heading size='md'>👋 Hi {userInfo.email || 'There'} </Heading>
 
-          {userInfo.hasPaid ? (
+          {userInfo.hasPaid && !userInfo.isUsingLn ? (
             <VStack gap={3} pt={5} alignItems='flex-start'>
               <Text textAlign='initial'>
                 Thanks so much for your support. <br /> You have unlimited access to CoverLetterGPT until:
               </Text>
               <Code alignSelf='center' fontSize='lg'>
-                {threeMonthsFromDatePaid.toUTCString().slice(0, -13)}
+                {oneMonthFromDatePaid.toUTCString().slice(0, -13)}
               </Code>
               <Checkbox
                 mt={3}
@@ -82,14 +82,14 @@ export default function ProfilePage({ user }: { user: User }) {
                 <Text fontSize='xs'>Email me when my subscription is about to expire</Text>
               </Checkbox>
             </VStack>
-          ) : (
+          ) : !userInfo.isUsingLn && (
             <HStack pt={3} textAlign='center'>
               <Heading size='sm'>You have </Heading>
               <Code>{userInfo?.credits ? userInfo.credits : '0'}</Code>
               <Heading size='sm'>cover letter{userInfo?.credits === 1 ? '' : 's'} left</Heading>
             </HStack>
           )}
-          {!userInfo.hasPaid && (
+          {!userInfo.hasPaid && !userInfo.isUsingLn && (
             <VStack py={3} gap={5}>
               <VStack py={3} gap={2}>
                 <HStack gap={5} display='grid' gridTemplateColumns='1fr 1fr'>
@@ -133,7 +133,7 @@ export default function ProfilePage({ user }: { user: User }) {
                       </Text>
                       <Heading size='md'>Using GPT-3 🦾</Heading>
                     </VStack>
-                    <Button mr={3} isLoading={isLoading} onClick={handleClick}>
+                    <Button mr={3} isLoading={isLoading} onClick={handleGpt3Click}>
                       Buy Now!
                     </Button>
                   </VStack>
@@ -157,9 +157,37 @@ export default function ProfilePage({ user }: { user: User }) {
                       </Text>
                       <Heading size='md'>Using GPT-4 🤖</Heading>
                     </VStack>
-                    <Button colorScheme='purple' mr={3} isLoading={isLoading} onClick={handleClick}>
+                    <Button colorScheme='purple' mr={3} isLoading={isGpt4loading} onClick={handleGpt4Click}>
                       💰 Buy Now!
                     </Button>
+                  </VStack>
+                </HStack>
+              </VStack>
+            </VStack>
+          )}
+          {userInfo.isUsingLn && (
+            <VStack py={3} gap={5}>
+              <VStack py={3} gap={2}>
+                <HStack gap={5} display='grid' gridTemplateColumns='1fr'>
+                  <VStack
+                    layerStyle='card'
+                    py={5}
+                    px={7}
+                    gap={3}
+                    height='100%'
+                    width='100%'
+                    justifyContent='center'
+                    alignItems='center'
+                  >
+                    <VStack gap={3} alignItems='center'>
+                      <Heading size='xl'>⚡️</Heading>
+                      <Text textAlign='start' fontSize='md'>
+                        You have affordable, pay-per-use access to CoverLetterGPT with GPT-4 via the Lightning Network
+                      </Text>
+                      <Text textAlign='start' fontSize='sm'>
+                        Note: if you prefer a montly subscription, please logout and sign in with Google.
+                      </Text>
+                    </VStack>
                   </VStack>
                 </HStack>
               </VStack>

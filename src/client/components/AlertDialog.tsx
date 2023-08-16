@@ -57,7 +57,7 @@ export function LeaveATip({
                 {credits === 1 ? '' : 's'} left
               </Text>
               <Text>
-                Purchase more or get unlimited access for 3 months for only <Code>$4.95</Code> !
+                Purchase unlimited access for only <Code>$4.95</Code> per month!
               </Text>
             </AlertDialogBody>
 
