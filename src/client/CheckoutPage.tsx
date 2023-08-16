@@ -3,7 +3,6 @@ import { Heading, Text, Spinner } from '@chakra-ui/react';
 import { User } from '@wasp/entities';
 import { useQuery } from '@wasp/queries';
 import getUserInfo from '@wasp/queries/getUserInfo';
-import updateUserHasPaid from '@wasp/actions/updateUserHasPaid';
 import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 
@@ -41,23 +40,11 @@ export default function CheckoutPage({ user }: { user: User }) {
         history.push('/profile');
       }, 4000);
     }
-    async function callUpdateUser(): Promise<void> {
-      const updatedUser = (await updateUserHasPaid()) as UpdateUserResult;
-      if (updatedUser?.hasPaid) {
-        setHasPaid('paid');
-      } else {
-        setHasPaid('error');
-        delayedRedirect();
-      }
-    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const cancel = urlParams.get('canceled');
-    const success = urlParams.get('success');
-    const credits = urlParams.get('credits');
     if (cancel) {
       setHasPaid('canceled');
-    } else if (success) {
-      callUpdateUser();
     } else {
       history.push('/profile');
     }

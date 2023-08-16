@@ -6,7 +6,6 @@ import {
   ModalFooter,
   ModalCloseButton,
   ModalBody,
-  Textarea,
   Box,
   HStack,
   VStack,
@@ -18,7 +17,6 @@ import { useEffect, useRef, useState } from 'react';
 import { milliSatsToCents } from '../../shared/utils';
 import decodeInvoice from '@wasp/actions/decodeInvoice';
 import lnPaymentStatus from '@wasp/actions/lnPaymentStatus';
-import { clear } from 'console';
 
 type LightningInvoice = {
   status: string;

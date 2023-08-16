@@ -225,11 +225,6 @@ action updateUser {
   entities: [User]
 }
 
-action updateUserHasPaid {
-  fn: import { updateUserHasPaid } from "@server/actions.js",
-  entities: [User]
-}
-
 action deleteJob {
   fn: import { deleteJob } from "@server/actions.js",
   entities: [Job]

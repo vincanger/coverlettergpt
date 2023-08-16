@@ -31,12 +31,13 @@ export default function NavBar() {
       top={0}
       width='100%'
       position='sticky'
-      bg='rgba(0, 0, 0, 0.5)'
+      bg='bg-contrast-sm'
+      // bg='rgba(0, 0, 0, 0.5)'
       backdropFilter='blur(5px)'
       borderBottom='sm'
       borderColor='border-contrast-sm'
       filter='drop-shadow(0px 0px 2px rgba(255, 255, 255, 0.25))'
-      color='white'
+      color='text-contrast-lg'
       zIndex={99}
     >
       <HStack width={['md', 'lg', 'xl']} px={1} align='center' justify='space-between'>

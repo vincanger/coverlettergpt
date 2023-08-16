@@ -1,5 +1,5 @@
 import BorderBox from './components/BorderBox';
-import { Heading, Text, Button, Code, Spinner, Checkbox, VStack, HStack } from '@chakra-ui/react';
+import { Heading, Text, Button, Code, Spinner, Checkbox, VStack, HStack, Link } from '@chakra-ui/react';
 import { CoverLetter, User } from '@wasp/entities';
 import { useQuery } from '@wasp/queries';
 import getUserInfo from '@wasp/queries/getUserInfo';
@@ -67,12 +67,22 @@ export default function ProfilePage({ user }: { user: User }) {
 
           {userInfo.hasPaid && !userInfo.isUsingLn ? (
             <VStack gap={3} pt={5} alignItems='flex-start'>
+              <Text textAlign='initial'>Thanks so much for your support!</Text>
+
               <Text textAlign='initial'>
-                Thanks so much for your support. <br /> You have unlimited access to CoverLetterGPT until:
+                You have unlimited access to CoverLetterGPT using{' '}
+                {user.gptModel === 'gpt-3.5-turbo' ? 'GPT-3' : 'GPT-4'} until:
               </Text>
+
               <Code alignSelf='center' fontSize='lg'>
                 {oneMonthFromDatePaid.toUTCString().slice(0, -13)}
               </Code>
+              <Text alignSelf='center' fontSize='xs' fontStyle='italic' textColor='text-contrast-sm'>
+                * Manage your{' '}
+                <Link textColor='purple.600' href='https://billing.stripe.com/p/login/5kA7sS0Wc3gD2QM6oo'>
+                  subscription here
+                </Link>
+              </Text>
               <Checkbox
                 mt={3}
                 textColor={!userInfo?.notifyPaymentExpires ? 'text-contrast-sm' : 'purple.200'}
@@ -82,12 +92,14 @@ export default function ProfilePage({ user }: { user: User }) {
                 <Text fontSize='xs'>Email me when my subscription is about to expire</Text>
               </Checkbox>
             </VStack>
-          ) : !userInfo.isUsingLn && (
-            <HStack pt={3} textAlign='center'>
-              <Heading size='sm'>You have </Heading>
-              <Code>{userInfo?.credits ? userInfo.credits : '0'}</Code>
-              <Heading size='sm'>cover letter{userInfo?.credits === 1 ? '' : 's'} left</Heading>
-            </HStack>
+          ) : (
+            !userInfo.isUsingLn && (
+              <HStack pt={3} textAlign='center'>
+                <Heading size='sm'>You have </Heading>
+                <Code>{userInfo?.credits ? userInfo.credits : '0'}</Code>
+                <Heading size='sm'>cover letter{userInfo?.credits === 1 ? '' : 's'} left</Heading>
+              </HStack>
+            )
           )}
           {!userInfo.hasPaid && !userInfo.isUsingLn && (
             <VStack py={3} gap={5}>

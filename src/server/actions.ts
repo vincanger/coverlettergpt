@@ -9,7 +9,6 @@ import type {
   GenerateEdit,
   UpdateJob,
   UpdateUser,
-  UpdateUserHasPaid,
   DeleteJob,
   StripePayment,
   StripeGpt4Payment,
@@ -85,6 +84,9 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
     command = gptConfig.ideasForCoverLetter;
     tokenNumber = 500;
   }
+
+
+  console.log('user gpt model: ', context.user.gptModel)
 
   const payload = {
     model: context.user.gptModel,
@@ -405,41 +407,6 @@ function dontUpdateUser(user: UserWithoutPassword): Promise<UserWithoutPassword>
     resolve(user);
   });
 }
-
-export const updateUserHasPaid: UpdateUserHasPaid<never, UpdateUserResult | UserWithoutPassword> = async (
-  _args,
-  context
-) => {
-  if (!context.user) {
-    throw new HttpError(401);
-  }
-  if (context.user.hasPaid) {
-    return dontUpdateUser(context.user as UserWithoutPassword);
-  }
-  const checkoutSessionId = context.user?.checkoutSessionId;
-  let status: Stripe.Checkout.Session.PaymentStatus;
-  if (!checkoutSessionId) {
-    return dontUpdateUser(context.user as UserWithoutPassword);
-  } else {
-    const session: Stripe.Checkout.Session = await stripe.checkout.sessions.retrieve(checkoutSessionId);
-    status = session.payment_status;
-  }
-  return context.entities.User.update({
-    where: {
-      id: context.user.id,
-    },
-    data: {
-      hasPaid: status === 'paid' ? true : false,
-      checkoutSessionId: null,
-      datePaid: status === 'paid' ? new Date() : undefined,
-    },
-    select: {
-      id: true,
-      email: true,
-      hasPaid: true,
-    },
-  });
-};
 
 type StripePaymentResult = {
   sessionUrl: string | null;
