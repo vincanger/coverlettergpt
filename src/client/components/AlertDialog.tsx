@@ -18,8 +18,7 @@ import {
 import { useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { signInUrl } from '@wasp/auth/helpers/Google';
-import { AiOutlineGoogle } from 'react-icons/ai';
+import { AiOutlineLogin } from 'react-icons/ai';
 import { BiTrash } from 'react-icons/bi';
 import deleteJob from '@wasp/actions/deleteJob';
 
@@ -78,25 +77,26 @@ export function LeaveATip({
 }
 
 export function LoginToBegin({ isOpen, onClose }: { isOpen: boolean; onOpen: () => void; onClose: () => void }) {
+  const history = useHistory();
   const loginRef = useRef(null);
 
   const handleClick = async () => {
-    window.open(signInUrl, '_self');
+    history.push('/login');
     onClose();
   };
 
   return (
     <AlertDialog isOpen={isOpen} leastDestructiveRef={loginRef} onClose={onClose}>
-      <AlertDialogOverlay backdropFilter='auto' backdropInvert='15%' backdropBlur='2px' >
+      <AlertDialogOverlay backdropFilter='auto' backdropInvert='15%' backdropBlur='2px'>
         <AlertDialogContent bgColor='bg-modal'>
           <AlertDialogHeader textAlign='center' fontSize='md' mt={3} fontWeight='bold'>
             ✋
           </AlertDialogHeader>
 
-          <AlertDialogBody textAlign='center'>Please Login with Google to Begin!</AlertDialogBody>
+          <AlertDialogBody textAlign='center'>Please Login to Begin!</AlertDialogBody>
 
           <AlertDialogFooter justifyContent='center'>
-            <Button ref={loginRef} leftIcon={<AiOutlineGoogle />} colorScheme='purple' onClick={handleClick}>
+            <Button ref={loginRef} leftIcon={<AiOutlineLogin />} colorScheme='purple' onClick={handleClick}>
               Login
             </Button>
           </AlertDialogFooter>
@@ -139,6 +139,7 @@ export function DeleteJob({
               size='sm'
               isLoading={isLoading}
               onClick={async () => {
+                if (!jobId) return;
                 setIsLoading(true);
                 await deleteJob({ jobId });
                 setIsLoading(false);
