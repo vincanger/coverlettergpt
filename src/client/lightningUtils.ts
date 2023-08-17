@@ -1,5 +1,11 @@
 import { LIGHTNING_ADDRESS, MILLISATS_PER_MESSAGE } from '../shared/utils';
 
+declare global {
+  interface Window {
+    webln: any;
+  }
+}
+
 export type LightningInvoice = {
   status: string;
   successAction: {

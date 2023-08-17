@@ -21,6 +21,7 @@ export default function Login() {
   const { onOpen, onClose, isOpen } = useDisclosure();
 
   const history = useHistory();
+  const [isLnUrlLoading, setIsLnUrlLoading] = useState<boolean>(false)
 
   useEffect(() => {
     console.log('user', user);
@@ -30,15 +31,22 @@ export default function Login() {
   }, [user]);
 
   useEffect(() => {
-    const getEncodedUrl = async () => {
-      const response = await getLnLoginUrl();
-      console.log(response);
-      return response;
-    };
-    getEncodedUrl().then((resp) => {
-      setK1Hash(resp.k1Hash);
-      setEncodedUrl(resp.encoded);
-    });
+    try {
+      setIsLnUrlLoading(true)
+      const getEncodedUrl = async () => {
+        const response = await getLnLoginUrl();
+        console.log(response);
+        return response;
+      };
+      getEncodedUrl().then((resp) => {
+        setK1Hash(resp.k1Hash);
+        setEncodedUrl(resp.encoded);
+      });
+    } catch (error) {
+      console.error('error fetching LN url: ', error)
+    } finally {
+      setIsLnUrlLoading(false)
+    }
   }, []);
 
   useEffect(() => {
@@ -73,7 +81,7 @@ export default function Login() {
     <>
       <BorderBox>
         {error && <Text>Something went wrong :(</Text>}
-        {isLoading ? (
+        {isLoading || isLnUrlLoading  ? (
           <Spinner />
         ) : (
           <VStack>
