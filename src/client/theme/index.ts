@@ -169,8 +169,8 @@ export const Link = {
 };
 
 const config = {
-  initialColorMode: 'dark',
-  useSystemColorMode: false,
+  initialColorMode: 'light',
+  useSystemColorMode: true,
 };
 
 export const styles = {

@@ -38,9 +38,10 @@ import createJob from '@wasp/actions/createJob';
 import updateCoverLetter from '@wasp/actions/updateCoverLetter';
 import useAuth from '@wasp/auth/useAuth';
 import LnPaymentModal from './components/LnPaymentModal';
-import { fetchLightningInvoice, payLightningInvoice } from './lightningUtils';
+import { fetchLightningInvoice } from './lightningUtils';
 import type { LightningInvoice } from './lightningUtils';
 import lnPaymentStatus from '@wasp/actions/lnPaymentStatus';
+import ThemeSwitch from './components/ThemeSwitch';
 
 function MainPage() {
   const [isPdfReady, setIsPdfReady] = useState<boolean>(false);
@@ -332,9 +333,12 @@ function MainPage() {
           onSubmit={!isCoverLetterUpdate ? handleSubmit(onSubmit) : handleSubmit(onUpdate)}
           style={{ width: '100%' }}
         >
-          <Heading size={'md'} alignSelf={'start'} mb={3}>
-            Job Info {isCoverLetterUpdate && <Code ml={1}>Editing...</Code>}
-          </Heading>
+          <HStack w='full' justifyContent='space-between' align='flex-start'>
+            <Heading size={'md'} alignSelf={'start'} mb={3}>
+              Job Info {isCoverLetterUpdate && <Code ml={1}>Editing...</Code>}
+            </Heading>
+            <ThemeSwitch />
+          </HStack>
           {showSpinner && <Spinner />}
           {showForm && (
             <>
@@ -558,11 +562,7 @@ function MainPage() {
       </BorderBox>
       <LeaveATip isOpen={isOpen} onOpen={onOpen} onClose={onClose} credits={user?.credits || 0} />
       <LoginToBegin isOpen={loginIsOpen} onOpen={loginOnOpen} onClose={loginOnClose} />
-      <LnPaymentModal
-        isOpen={lnPaymentIsOpen}
-        onClose={lnPaymentOnClose}
-        lightningInvoice={lightningInvoice}
-      />
+      <LnPaymentModal isOpen={lnPaymentIsOpen} onClose={lnPaymentOnClose} lightningInvoice={lightningInvoice} />
     </>
   );
 }

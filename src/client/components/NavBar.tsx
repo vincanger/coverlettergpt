@@ -35,7 +35,7 @@ export default function NavBar() {
       // bg='rgba(0, 0, 0, 0.5)'
       backdropFilter='blur(5px)'
       borderBottom='sm'
-      borderColor='border-contrast-sm'
+      borderColor='border-contrast-xs'
       filter='drop-shadow(0px 0px 2px rgba(255, 255, 255, 0.25))'
       color='text-contrast-lg'
       zIndex={99}
@@ -139,7 +139,7 @@ function MobileButton({
         ) : (
           <>
             <Link as={RouterLink} to='/login'>
-              <MenuItem>Login</MenuItem> 
+              <MenuItem>Login</MenuItem>
             </Link>
           </>
         )}
