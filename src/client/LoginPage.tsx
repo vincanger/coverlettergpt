@@ -24,7 +24,6 @@ export default function Login() {
   const [isLnUrlLoading, setIsLnUrlLoading] = useState<boolean>(false)
 
   useEffect(() => {
-    console.log('user', user);
     if (user) {
       history.push('/');
     }
@@ -35,7 +34,6 @@ export default function Login() {
       setIsLnUrlLoading(true)
       const getEncodedUrl = async () => {
         const response = await getLnLoginUrl();
-        console.log(response);
         return response;
       };
       getEncodedUrl().then((resp) => {
@@ -68,7 +66,6 @@ export default function Login() {
     }, 1000);
 
     setTimeout(() => {
-      console.log('lnUserInfo: ', lnUserInfo, user);
       if (!lnUserInfo?.token || !user) {
         clearInterval(interval);
         setLnIsLoading(false);

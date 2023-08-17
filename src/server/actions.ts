@@ -89,7 +89,7 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
   console.log('user gpt model: ', context.user.gptModel)
 
   const payload = {
-    model: context.user.gptModel,
+    model: context.user.gptModel === 'gpt-4' ? 'gpt-4' : 'gpt-3.5-turbo',
     messages: [
       {
         role: 'system',
@@ -174,7 +174,7 @@ export const generateEdit: GenerateEdit<{ content: string; improvement: string }
   tokenNumber = 1000;
 
   const payload = {
-    model: context.user.gptModel,
+    model: context.user.gptModel === 'gpt-4' ? 'gpt-4' : 'gpt-3.5-turbo',
     messages: [
       {
         role: 'system',
@@ -192,7 +192,7 @@ export const generateEdit: GenerateEdit<{ content: string; improvement: string }
   let json: OpenAIResponse;
 
   try {
-    if (!context.user.hasPaid && !context.user.credits) {
+    if (!context.user.hasPaid && !context.user.credits && !context.user.isUsingLn) {
       throw new HttpError(402, 'User has not paid or is out of credits');
     } else if (context.user.credits && !context.user.hasPaid) {
       console.log('decrementing credits \n\n');

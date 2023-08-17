@@ -70,7 +70,6 @@ export default function LnPaymentModal({
   useEffect(() => {
     const paymentAmount = async () => {
       if (lightningInvoice) {
-        console.log('lightningInvoice; ', lightningInvoice);
         const decodedInvoice = await decodeInvoice(lightningInvoice.pr);
         const amountSat = decodedInvoice.satoshis ? decodedInvoice.satoshis : 0;
         let amountCents = await milliSatsToCents(amountSat);
@@ -99,7 +98,6 @@ export default function LnPaymentModal({
       try {
         const response = await fetch(lightningInvoice.verify);
         const result = await response.json();
-        console.log('verify result: ', result);
         if (result.settled) {
           setStatus('success');
 

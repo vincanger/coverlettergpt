@@ -33,7 +33,7 @@ export const semanticTokens = {
       _dark: 'rgba(0, 0, 0, 0.87)',
     },
     'bg-modal': {
-      default: 'rgba(255, 255, 255, 0.82)',
+      default: 'rgb(255, 255, 255)',
       _dark: '#1f1f1f',
     },
     'text-contrast-xs': {

@@ -37,11 +37,12 @@ import generateCoverLetter from '@wasp/actions/generateCoverLetter';
 import createJob from '@wasp/actions/createJob';
 import updateCoverLetter from '@wasp/actions/updateCoverLetter';
 import useAuth from '@wasp/auth/useAuth';
+import ThemeSwitch from './components/ThemeSwitch';
 import LnPaymentModal from './components/LnPaymentModal';
 import { fetchLightningInvoice } from './lightningUtils';
 import type { LightningInvoice } from './lightningUtils';
 import lnPaymentStatus from '@wasp/actions/lnPaymentStatus';
-import ThemeSwitch from './components/ThemeSwitch';
+import { User } from '@wasp/entities';
 
 function MainPage() {
   const [isPdfReady, setIsPdfReady] = useState<boolean>(false);
@@ -170,6 +171,33 @@ function MainPage() {
     }
   }
 
+  async function payWithLn(user: Omit<User, 'password'>): Promise<boolean> {
+    if (user.isUsingLn && user.credits === 0) {
+      const invoice = await fetchLightningInvoice();
+      if (invoice) {
+        invoice.status = 'pending';
+        await lnPaymentStatus(invoice);
+        setLightningInvoice(invoice);
+        lnPaymentOnOpen();
+      } else {
+        alert('Something went wrong, please try again');
+        return false;
+      }
+
+      let status = invoice.status;
+      while (status === 'pending') {
+        status = await lnPaymentStatus(invoice);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+      if (status !== 'success') {
+        alert('Something went wrong, please try again');
+        return false;
+      }
+      return true;
+    }
+    return true;
+  }
+
   async function onSubmit(values: any): Promise<void> {
     let canUserContinue = checkUsageNumbers();
     if (!user) {
@@ -180,30 +208,11 @@ function MainPage() {
       history.push('/profile');
       return;
     }
-    if (user.isUsingLn && user.credits === 0) {
-      const invoice = await fetchLightningInvoice();
-      if (invoice) {
-        invoice.status = 'pending';
-        await lnPaymentStatus(invoice);
-        setLightningInvoice(invoice);
-        lnPaymentOnOpen();
-      } else {
-        alert('Something went wrong, please try again');
-        return;
-      }
-
-      let status = invoice.status;
-      while (status === 'pending') {
-        status = await lnPaymentStatus(invoice);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-      if (status !== 'success') {
-        alert('Something went wrong, please try again');
-        return;
-      }
-    }
 
     try {
+      const didUserPay = await payWithLn(user);
+      if (!didUserPay) return;
+
       const job = await createJob(values);
 
       const creativityValue = convertToSliderValue(sliderValue);
@@ -241,6 +250,9 @@ function MainPage() {
     }
 
     try {
+      const didUserPay = await payWithLn(user);
+      if (!didUserPay) return;
+
       if (!job) {
         throw new Error('Job not found');
       }
@@ -294,7 +306,6 @@ function MainPage() {
   function checkUsageNumbers(): Boolean {
     if (user) {
       if (user.isUsingLn) {
-        console.log('user is using ln');
         return true;
       }
       if (!user.hasPaid && !user.isUsingLn && user.credits > 0) {
