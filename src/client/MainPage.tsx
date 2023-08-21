@@ -333,6 +333,8 @@ function MainPage() {
         layerStyle='card'
         px={4}
         py={2}
+        mt={3}
+        mb={-3}
         visibility={!coverLetterCount ? 'hidden' : 'visible'}
         _hover={{ bgColor: 'bg-contrast-md' }}
         transition='0.1s ease-in-out'
@@ -348,7 +350,9 @@ function MainPage() {
             <Heading size={'md'} alignSelf={'start'} mb={3}>
               Job Info {isCoverLetterUpdate && <Code ml={1}>Editing...</Code>}
             </Heading>
-            <ThemeSwitch />
+            <Button variant='link' border='0px'>
+              <ThemeSwitch />
+            </Button>
           </HStack>
           {showSpinner && <Spinner />}
           {showForm && (
@@ -412,7 +416,7 @@ function MainPage() {
                 <Textarea
                   id='description'
                   borderRadius={0}
-                  placeholder='copy & paste the job description here'
+                  placeholder='copy & paste the job description in any language'
                   {...register('description', {
                     required: 'This is required',
                   })}

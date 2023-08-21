@@ -137,7 +137,7 @@ export default function ProfilePage({ user }: { user: User }) {
                     alignItems='center'
                   >
                     <VStack gap={3} alignItems='start'>
-                      <Heading size='xl'>$4.95</Heading>
+                      <Heading size='xl'>$2.95</Heading>
                       <Text textAlign='start' fontSize='md'>
                         Unlimited
                         <br />
@@ -162,7 +162,7 @@ export default function ProfilePage({ user }: { user: User }) {
                     alignItems='center'
                   >
                     <VStack gap={3} alignItems='start'>
-                      <Heading size='xl'>$11.95</Heading>
+                      <Heading size='xl'>$5.95</Heading>
 
                       <Text textAlign='start' fontSize='md'>
                         Unlimited <br /> monthly subscription

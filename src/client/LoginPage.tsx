@@ -21,7 +21,6 @@ export default function Login() {
   const { onOpen, onClose, isOpen } = useDisclosure();
 
   const history = useHistory();
-  const [isLnUrlLoading, setIsLnUrlLoading] = useState<boolean>(false)
 
   useEffect(() => {
     if (user) {
@@ -31,7 +30,6 @@ export default function Login() {
 
   useEffect(() => {
     try {
-      setIsLnUrlLoading(true)
       const getEncodedUrl = async () => {
         const response = await getLnLoginUrl();
         return response;
@@ -41,9 +39,8 @@ export default function Login() {
         setEncodedUrl(resp.encoded);
       });
     } catch (error) {
-      console.error('error fetching LN url: ', error)
-    } finally {
-      setIsLnUrlLoading(false)
+      console.error('error fetching LN url: ', error);
+      setEncodedUrl('error');
     }
   }, []);
 
@@ -78,19 +75,17 @@ export default function Login() {
     <>
       <BorderBox>
         {error && <Text>Something went wrong :(</Text>}
-        {isLoading || isLnUrlLoading  ? (
+        {isLoading || !encodedUrl ? (
           <Spinner />
         ) : (
           <VStack>
             <a href={signInUrl}>
               <Button leftIcon={<AiOutlineGoogle />}>Google Sign In</Button>
             </a>
-            {!!encodedUrl && (
-              <Button isLoading={lnIsLoading} onClick={handleWalletClick} leftIcon={<BsCurrencyBitcoin />}>
-                {' '}
-                Lightning Sign In
-              </Button>
-            )}
+            <Button isLoading={lnIsLoading} onClick={handleWalletClick} leftIcon={<BsCurrencyBitcoin />}>
+              {' '}
+              Lightning Sign In
+            </Button>
           </VStack>
         )}
       </BorderBox>
