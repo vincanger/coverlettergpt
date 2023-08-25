@@ -54,6 +54,7 @@ export default function Login() {
   }, [lnUserInfo]);
 
   const handleWalletClick = () => {
+    if (!encodedUrl) return;
     onOpen();
     setLnIsLoading(true);
     let interval: any = null;

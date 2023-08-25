@@ -73,7 +73,7 @@ export default function LoginModal({ status, encodedUrl, isOpen, onClose, handle
                 Copy
               </Button>
               {!!encodedUrl && (
-                <a href={encodedUrl}>
+                <a href={`lightning:${encodedUrl}`}>
                   <Button id='open-button' onClick={handleWalletClick} ref={buttonRef}>
                     Login with ⚡ Wallet
                   </Button>
