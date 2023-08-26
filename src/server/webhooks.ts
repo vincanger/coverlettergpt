@@ -14,47 +14,67 @@ export const stripeWebhook: StripeWebhook = async (request, response, context) =
   userStripeId = session.customer as string;
 
   try {
-    const { line_items } = await stripe.checkout.sessions.retrieve(session.id, {
-      expand: ['line_items'],
-    });
-
-    console.log('line_items: ', line_items);
-
-    if (line_items?.data[0]?.price?.id === process.env.GPT4_PRICE_ID) {
-      console.log('GPT4 Subscription purchased');
-      await context.entities.User.updateMany({
-        where: {
-          stripeId: userStripeId,
-        },
-        data: {
-          hasPaid: true,
-          gptModel: 'gpt-4',
-          datePaid: new Date(),
-        },
+    if (event.type === 'checkout.session.completed') {
+      const { line_items } = await stripe.checkout.sessions.retrieve(session.id, {
+        expand: ['line_items'],
       });
-    } else if (line_items?.data[0]?.price?.id === process.env.PRODUCT_PRICE_ID) {
-      console.log('GPT3.5-turbo Subscription purchased');
-      await context.entities.User.updateMany({
-        where: {
-          stripeId: userStripeId,
-        },
-        data: {
-          hasPaid: true,
-          datePaid: new Date(),
-          gptModel: 'gpt-3.5-turbo',
-        },
-      });
-    } else if (line_items?.data[0]?.price?.id === process.env.PRODUCT_CREDITS_PRICE_ID) {
-      console.log('Credits purchased: ');
-      await context.entities.User.updateMany({
-        where: {
-          stripeId: userStripeId,
-        },
-        data: {
-          credits: {
-            increment: 10,
+      console.log('line_items: ', line_items);
+
+      if (line_items?.data[0]?.price?.id === process.env.GPT4_PRICE_ID) {
+        console.log('GPT4 Subscription purchased');
+        await context.entities.User.updateMany({
+          where: {
+            stripeId: userStripeId,
           },
-          gptModel: 'gpt-3.5-turbo',
+          data: {
+            hasPaid: true,
+            gptModel: 'gpt-4',
+            datePaid: new Date(),
+          },
+        });
+      } else if (line_items?.data[0]?.price?.id === process.env.PRODUCT_PRICE_ID) {
+        console.log('GPT3.5-turbo Subscription purchased');
+        await context.entities.User.updateMany({
+          where: {
+            stripeId: userStripeId,
+          },
+          data: {
+            hasPaid: true,
+            datePaid: new Date(),
+            gptModel: 'gpt-3.5-turbo',
+          },
+        });
+      } else if (line_items?.data[0]?.price?.id === process.env.PRODUCT_CREDITS_PRICE_ID) {
+        console.log('Credits purchased: ');
+        await context.entities.User.updateMany({
+          where: {
+            stripeId: userStripeId,
+          },
+          data: {
+            credits: {
+              increment: 10,
+            },
+            gptModel: 'gpt-3.5-turbo',
+          },
+        });
+      }
+    } else if (event.type === 'invoice.paid') {
+      await context.entities.User.updateMany({
+        where: {
+          stripeId: userStripeId,
+        },
+        data: {
+          hasPaid: true,
+          datePaid: new Date(),
+        },
+      });
+    } else if (event.type === 'invoice.paymnent_failed') {
+      await context.entities.User.updateMany({
+        where: {
+          stripeId: userStripeId,
+        },
+        data: {
+          hasPaid: false,
         },
       });
     } else if (event.type === 'customer.subscription.updated') {
