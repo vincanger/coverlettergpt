@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { emailSender } from '@wasp/email/index.js';
 
 const stripe = new Stripe(process.env.STRIPE_KEY!, {
-  apiVersion: '2022-11-15',
+  apiVersion: '2023-08-16',
 });
 
 export const stripeWebhook: StripeWebhook = async (request, response, context) => {
@@ -14,11 +14,20 @@ export const stripeWebhook: StripeWebhook = async (request, response, context) =
   userStripeId = session.customer as string;
 
   try {
+    if (event.type === 'payment_intent.succeeded'  ) {
+      console.log('payment succeeded', '\n\n', event);
+    }
+
     if (event.type === 'checkout.session.completed') {
+      console.log('checkout.session.completed', event.type, '\n\n', event);
+
+      // retrieve session 
       const { line_items } = await stripe.checkout.sessions.retrieve(session.id, {
-        expand: ['line_items'],
+        expand: ['line_items.data.price'],
       });
-      console.log('line_items: ', line_items);
+
+
+      console.log('line_items: ', line_items)
 
       if (line_items?.data[0]?.price?.id === process.env.GPT4_PRICE_ID) {
         console.log('GPT4 Subscription purchased');

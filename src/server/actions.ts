@@ -17,7 +17,7 @@ import type {
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_KEY!, {
-  apiVersion: '2022-11-15',
+  apiVersion: '2023-08-16',
 });
 
 const DOMAIN = process.env.WASP_WEB_CLIENT_URL || 'http://localhost:3000';
