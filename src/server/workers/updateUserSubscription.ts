@@ -5,14 +5,26 @@ export async function updateUserSubscription(_args: unknown, context: any) {
 
   const currentDate = new Date();
   const threeMonthsAgo = new Date(currentDate.setMonth(currentDate.getMonth() - 3));
+
+  // new subscriptions were introduced on the 17th of August, 2023
+  // so all payments before that date are considered legacy subscriptions and should be updated
+  // but we don't want to update subscriptions that were created after that date
+  // const dateSubscriptionsWereIntroduced = new Date('2023-08-17');
   
-  const expiredUserSubscriptions = await context.entities.User.findMany({
+  let expiredUserSubscriptions = await context.entities.User.findMany({
     where: {
       datePaid: {
         lt: threeMonthsAgo,
       }
     },
   });
+
+  // expiredUserSubscriptions = expiredUserSubscriptions.filter((user: User) => {
+  //   if (user.hasPaid === false || user.datePaid === null) {
+  //     return false;
+  //   }
+  //   return user.datePaid < dateSubscriptionsWereIntroduced;
+  // }); 
 
   const updatedSubscriptions = await Promise.allSettled(
     expiredUserSubscriptions.map(async (user: User) => {
