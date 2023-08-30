@@ -7,7 +7,8 @@ app applyai {
         "<meta property='og:type' content='website' />",
         "<meta property='og:url' content='https://CoverLetterGPT.xyz' />",
         "<meta property='og:description' content='Create Unique Cover Letters Based on Your Skills. Supercharge Your Job Search.' />",
-        "<meta property='og:image' content='src/client/static/coverlettegpt.png' />",
+        "<meta property='og:image' content='https://CoverLetterGPT.xyz/homepage.png' />",
+        "<meta name='twitter:image' content='https://CoverLetterGPT.xyz/homepage.png' />",
         "<!-- Google tag (gtag.js) --><script async src=\"https://www.googletagmanager.com/gtag/js?id=G-SXYZR2FHVJ\"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-SXYZR2FHVJ');</script>"
   ],
   // 🔐 Auth out of the box! https://wasp-lang.dev/docs/language/features#authentication--authorization
