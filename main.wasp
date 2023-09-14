@@ -263,6 +263,10 @@ action lnPaymentStatus {
   entities: [LnPayment]
 }
 
+action milliSatsToCents {
+  fn: import { milliSatsToCents } from "@server/ln.js",
+}
+
 // 📚 Queries
 
 query getJobs {

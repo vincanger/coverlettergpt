@@ -1,5 +1,5 @@
 import { randomBytes, createHash as cryptoCreateHash } from 'crypto';
-import type { GetLnLoginUrl, DecodeInvoice, LnPaymentStatus } from '@wasp/actions/types';
+import type { GetLnLoginUrl, DecodeInvoice, LnPaymentStatus, MilliSatsToCents } from '@wasp/actions/types';
 import type { GetLnUserInfo } from '@wasp/queries/types';
 //@ts-ignore
 import lnurl from 'lnurl';
@@ -9,6 +9,7 @@ import type { LnLogin } from '@wasp/apis/types';
 import { LnData } from '@wasp/entities';
 import bolt11 from 'bolt11';
 import HttpError from '@wasp/core/HttpError.js';
+import axios from 'axios';
 
 const DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -43,7 +44,6 @@ export const getLnLoginUrl: GetLnLoginUrl<void, LnLoginData> = async (_args, con
     jwt: '',
   };
 
-  // hashStorage.set(hash, null);
   console.log('hash: ', data.k1Hash);
   await context.entities.LnData.create({
     data: {
@@ -51,13 +51,6 @@ export const getLnLoginUrl: GetLnLoginUrl<void, LnLoginData> = async (_args, con
     },
   });
 
-  // const jwt = await new SignJWT({ hash: data.k1Hash })
-  // .setProtectedHeader({ alg: 'HS256' })
-  // .setIssuedAt()
-  // .setExpirationTime('5min')
-  // .sign(Buffer.from(process.env.JWT_SECRET!, 'utf-8'));
-
-  // data.jwt = jwt;
   return data;
 };
 
@@ -177,3 +170,53 @@ export const lnPaymentStatus: LnPaymentStatus<LightningInvoice, string> = async 
 
   return updatedInvoice.status;
 };
+
+const getBitcoinPrice = async () => {
+
+  let response = null;
+
+  try {
+    response = await axios.get('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest', {
+      headers: {
+        'X-CMC_PRO_API_KEY': process.env.COINMARKETCAP_API_KEY!,
+      },
+    });
+  } catch (error: any) {
+    console.log('error calling coinmarket cap api: ', error.message);
+    return null;
+  }
+  if (response) {
+    const json = response.data.data[0].quote.USD.price;
+    console.log(json);
+    return json;
+  }
+};
+
+// export const centsToMilliSats = async (cents: number) => {
+//   const bitcoinPrice = await getBitcoinPrice();
+//   if (bitcoinPrice === null) return null;
+
+//   const milliSatsPerDollar = 100000000000 / bitcoinPrice;
+//   return cents * milliSatsPerDollar;
+// };
+
+export const milliSatsToCents: MilliSatsToCents<{milliSats: number}, number> = async ({milliSats}, _context) => {
+  const bitcoinPrice = await getBitcoinPrice();
+  if (bitcoinPrice === null) return 0;
+
+  const dollarsPerSat = bitcoinPrice / 100_000_000; // 
+  const centsPerDollar = (milliSats / 1000) * dollarsPerSat;
+  return centsPerDollar;
+};
+
+export function parseLightningAddress(callback: string): string {
+  if (!callback) return '';
+  const matches = callback.match(/lnurlp\/(.+)\/callback/);
+  if (matches && matches.length > 1) {
+    const [username, host] = matches[1].split('@');
+    if (username && host) {
+      return `${username}@${host}`;
+    }
+  }
+  return '';
+}

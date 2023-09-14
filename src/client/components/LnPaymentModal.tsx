@@ -14,7 +14,7 @@ import {
 import { AiFillCheckCircle } from 'react-icons/ai';
 import QRCode from 'qrcode.react';
 import { useEffect, useRef, useState } from 'react';
-import { milliSatsToCents } from '../../shared/utils';
+import milliSatsToCents from '@wasp/actions/milliSatsToCents';
 import decodeInvoice from '@wasp/actions/decodeInvoice';
 import lnPaymentStatus from '@wasp/actions/lnPaymentStatus';
 
@@ -38,11 +38,7 @@ type InvoiceModalProps = {
 type Interval = ReturnType<typeof setInterval>;
 let interval: Interval;
 
-export default function LnPaymentModal({
-  lightningInvoice,
-  isOpen,
-  onClose,
-}: InvoiceModalProps) {
+export default function LnPaymentModal({ lightningInvoice, isOpen, onClose }: InvoiceModalProps) {
   const [status, setStatus] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isReady, setIsReady] = useState(false);
@@ -71,8 +67,11 @@ export default function LnPaymentModal({
     const paymentAmount = async () => {
       if (lightningInvoice) {
         const decodedInvoice = await decodeInvoice(lightningInvoice.pr);
+
         const amountSat = decodedInvoice.satoshis ? decodedInvoice.satoshis : 0;
-        let amountCents = await milliSatsToCents(amountSat);
+
+        let amountCents = await milliSatsToCents({ milliSats: amountSat });
+
         amountCents = amountCents * 1000;
         return amountCents;
       }
@@ -84,8 +83,8 @@ export default function LnPaymentModal({
     };
 
     if (lightningInvoice) {
-      setIsReady(true);
       fetchAmount();
+      setIsReady(true);
     }
   }, [lightningInvoice]);
 
@@ -104,7 +103,10 @@ export default function LnPaymentModal({
           lightningInvoice.status = 'success';
           await lnPaymentStatus(lightningInvoice);
           clearInterval(interval);
-          setTimeout(() => onClose(), 2000); // TODO: check this
+          setTimeout(() => {
+            setStatus('');
+            onClose()
+          }, 2000); // TODO: check this
         } else {
           setStatus('pending');
         }
@@ -165,7 +167,7 @@ export default function LnPaymentModal({
         <ModalBody>
           <VStack gap={3}>
             <Box>{content}</Box>
-            {amountCents !== null && <p className='mb-2 text-center'>Pay ${amountCents} for the API call</p>}
+            <p className='mb-2 text-center'>Pay ~${amountCents ? amountCents.toFixed(2) : '-.--'} for the API call</p>
             <HStack gap={3}>
               <Button id='copy-button' ref={copyButtonRef} onClick={handleCopyClick}>
                 Copy

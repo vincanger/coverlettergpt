@@ -17,39 +17,45 @@ interface EditPopoverProps extends ButtonGroupProps {
   user: Omit<User, 'password'>;
 }
 
-
 export function EditPopover({ setTooltip, selectedText, user, ...props }: EditPopoverProps) {
   const [lightningInvoice, setLightningInvoice] = useState<LightningInvoice | null>(null);
-  const { textareaState, setTextareaState } = useContext(TextareaContext);
-  
+  const { textareaState, setTextareaState, setIsLnPayPending } = useContext(TextareaContext);
+
   const { data: userInfo } = useQuery(getUserInfo, { id: user.id });
-  
+
   const { isOpen: isPayOpen, onOpen: onPayOpen, onClose: onPayClose } = useDisclosure();
   const { isOpen: lnPaymentIsOpen, onOpen: lnPaymentOnOpen, onClose: lnPaymentOnClose } = useDisclosure();
-  
+
   async function payWithLn(user: Omit<User, 'password'>): Promise<boolean> {
     if (user.isUsingLn && user.credits === 0) {
-      const invoice = await fetchLightningInvoice();
-      if (invoice) {
-        invoice.status = 'pending';
-        await lnPaymentStatus(invoice);
-        setLightningInvoice(invoice);
-        lnPaymentOnOpen();
-      } else {
+      try {
+        setIsLnPayPending(true);
+        const invoice = await fetchLightningInvoice();
+        if (invoice) {
+          invoice.status = 'pending';
+          await lnPaymentStatus(invoice);
+          setLightningInvoice(invoice);
+          lnPaymentOnOpen();
+        } else {
+          alert('Something went wrong, please try again');
+          return false;
+        }
+
+        let status = invoice.status;
+        while (status === 'pending') {
+          status = await lnPaymentStatus(invoice);
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+        if (status !== 'success') {
+          alert('Something went wrong, please try again');
+          return false;
+        }
+        return true;
+      } catch (error) {
         alert('Something went wrong, please try again');
-        return false;
+      } finally {
+        setIsLnPayPending(false);
       }
-  
-      let status = invoice.status;
-      while (status === 'pending') {
-        status = await lnPaymentStatus(invoice);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-      if (status !== 'success') {
-        alert('Something went wrong, please try again');
-        return false;
-      }
-      return true;
     }
     return true;
   }
@@ -74,14 +80,13 @@ export function EditPopover({ setTooltip, selectedText, user, ...props }: EditPo
             '\n --- \n' +
             value.slice(index + selectString.length);
           setTextareaState(loading);
-
         } else {
           loadingString = 'Loading';
         }
       }, 750);
 
       const newValue = await generateEdit({ content: selectString, improvement });
-      
+
       clearInterval(loadingInterval);
       setTextareaState(value);
 
@@ -108,8 +113,11 @@ export function EditPopover({ setTooltip, selectedText, user, ...props }: EditPo
       return;
     }
     if (userInfo?.isUsingLn) {
+      if (userInfo.credits > 0) {
+        onPayOpen();
+      }
       try {
-        const didUserPay = await payWithLn(user)
+        const didUserPay = await payWithLn(user);
         if (!didUserPay) return;
       } catch (error) {
         console.error('error paying with ln: ', error);
@@ -145,7 +153,13 @@ export function EditPopover({ setTooltip, selectedText, user, ...props }: EditPo
           </ButtonGroup>
         </Box>
       </VStack>
-      <LeaveATip isOpen={isPayOpen} onOpen={onPayOpen} onClose={onPayClose} credits={userInfo?.credits || 0} />
+      <LeaveATip
+        isOpen={isPayOpen}
+        onOpen={onPayOpen}
+        onClose={onPayClose}
+        credits={userInfo?.credits || 0}
+        isUsingLn={user?.isUsingLn || false}
+      />
       <LnPaymentModal isOpen={lnPaymentIsOpen} onClose={lnPaymentOnClose} lightningInvoice={lightningInvoice} />
     </>
   );

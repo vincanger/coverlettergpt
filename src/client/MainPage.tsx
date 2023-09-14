@@ -306,6 +306,9 @@ function MainPage() {
   function checkUsageNumbers(): Boolean {
     if (user) {
       if (user.isUsingLn) {
+        if (user.credits < 3 && user.credits > 0) { 
+          onOpen();
+        }
         return true;
       }
       if (!user.hasPaid && !user.isUsingLn && user.credits > 0) {
@@ -575,7 +578,7 @@ function MainPage() {
           )}
         </form>
       </BorderBox>
-      <LeaveATip isOpen={isOpen} onOpen={onOpen} onClose={onClose} credits={user?.credits || 0} />
+      <LeaveATip isOpen={isOpen} onOpen={onOpen} onClose={onClose} credits={user?.credits || 0} isUsingLn={user?.isUsingLn || false} />
       <LoginToBegin isOpen={loginIsOpen} onOpen={loginOnOpen} onClose={loginOnClose} />
       <LnPaymentModal isOpen={lnPaymentIsOpen} onClose={lnPaymentOnClose} lightningInvoice={lightningInvoice} />
     </>

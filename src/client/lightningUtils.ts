@@ -52,9 +52,7 @@ export const fetchLightningInvoice = async () => {
   }
 
   try {
-    console.log('Lighting callback: ', lightningCallback);
     const response = await fetch(lightningCallback + '?amount=' + milliSatsPerMessage);
-    console.log('Response: ', response);
     if (response.ok) {
       const invoice: LightningInvoice = await response.json();
       return invoice;
@@ -73,7 +71,6 @@ export const payLightningInvoice = async (setLightningInvoice: any, setShowInvoi
     alert('Error fetching invoice');
     return;
   }
-  console.log(invoice);
   setLightningInvoice(invoice);
   if (!invoice) {
     alert('Failed to fetch lightning invoice. Please set your lightning address.');
@@ -87,7 +84,6 @@ export const payLightningInvoice = async (setLightningInvoice: any, setShowInvoi
       paymentSuccessful = !!preimage;
     } catch {
       // Open the modal and wait for the payment
-      console.log('In catch');
       setShowInvoiceModal(true);
       paymentSuccessful = await new Promise((resolve) => {
         // Handle payment failure or modal close
@@ -98,7 +94,6 @@ export const payLightningInvoice = async (setLightningInvoice: any, setShowInvoi
     }
   } else {
     // Open the modal and wait for the payment
-    console.log('showing modal');
     setShowInvoiceModal(true);
     paymentSuccessful = await new Promise((resolve) => {
       // Handle payment failure or modal close

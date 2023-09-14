@@ -21,12 +21,15 @@ import { useState, useEffect } from 'react';
 import { AiOutlineLogin } from 'react-icons/ai';
 import { BiTrash } from 'react-icons/bi';
 import deleteJob from '@wasp/actions/deleteJob';
+import milliSatsToCents from '@wasp/actions/milliSatsToCents';
 
 export function LeaveATip({
   isOpen,
   onClose,
   credits,
+  isUsingLn,
 }: {
+  isUsingLn: boolean;
   credits: number;
   isOpen: boolean;
   onOpen: () => void;
@@ -44,7 +47,7 @@ export function LeaveATip({
   return (
     <>
       <AlertDialog isOpen={isOpen} leastDestructiveRef={tipRef} onClose={onClose}>
-        <AlertDialogOverlay backdropFilter='auto' backdropInvert='15%' backdropBlur='2px' >
+        <AlertDialogOverlay backdropFilter='auto' backdropInvert='15%' backdropBlur='2px'>
           <AlertDialogContent bgColor='bg-modal'>
             <AlertDialogHeader fontSize='lg' fontWeight='bold'>
               👋 Thanks for trying CoverLetterGPT.
@@ -52,22 +55,35 @@ export function LeaveATip({
 
             <AlertDialogBody textAlign='center'>
               <Text>
-                You have <Code>{credits}</Code> cover letter
-                {credits === 1 ? '' : 's'} left
+                You have <Code>{credits}</Code> free cover letter {credits === 1 ? 'credit' : 'credits'} left.
               </Text>
-              <Text>
-                Purchase unlimited access for only <Code>$4.95</Code> per month!
+              <Text mt={4}>
+                {!isUsingLn ? (
+                  <>
+                    Purchase unlimited access for only <Code>$4.95</Code> per month!
+                  </>
+                ) : (
+                  <>After, just pay a small fee per cover letter with your lightning ⚡️ wallet. </>
+                )}
               </Text>
             </AlertDialogBody>
 
             <AlertDialogFooter>
-              <Button isLoading={isLoading} ref={tipRef} colorScheme='purple' onClick={handleClick}>
-                💰 Buy More
-              </Button>
-              <Spacer />
-              <Button alignSelf='flex-end' fontSize='sm' variant='solid' size='sm' onClick={onClose}>
-                No, Thanks
-              </Button>
+              {!isUsingLn ? (
+                <>
+                  <Button isLoading={isLoading} ref={tipRef} colorScheme='purple' onClick={handleClick}>
+                    💰 Buy More
+                  </Button>
+                  <Spacer />
+                  <Button alignSelf='flex-end' fontSize='sm' variant='solid' size='sm' onClick={onClose}>
+                    No, Thanks
+                  </Button>
+                </>
+              ) : (
+                <Button alignSelf='flex-end' fontSize='sm' variant='solid' size='sm' onClick={onClose}>
+                  OK
+                </Button>
+              )}
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialogOverlay>
@@ -121,7 +137,7 @@ export function DeleteJob({
 
   return (
     <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
-      <AlertDialogOverlay backdropFilter='auto' backdropInvert='15%' backdropBlur='2px' >
+      <AlertDialogOverlay backdropFilter='auto' backdropInvert='15%' backdropBlur='2px'>
         <AlertDialogContent bgColor='bg-modal'>
           <AlertDialogHeader fontSize='md' mt={3} fontWeight='bold'>
             ⛔️ Delete Job
@@ -179,14 +195,16 @@ export function EditAlert({ coverLetter }: { coverLetter: boolean }) {
 
   return (
     <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
-      <AlertDialogOverlay backdropFilter='auto' backdropInvert='15%' backdropBlur='2px' >
+      <AlertDialogOverlay backdropFilter='auto' backdropInvert='15%' backdropBlur='2px'>
         <AlertDialogContent bgColor='bg-modal'>
           <AlertDialogHeader fontSize='md' mt={3} fontWeight='bold'>
             📝 Your cover letter is ready!
           </AlertDialogHeader>
 
           <AlertDialogBody gap={5} pointerEvents='none'>
-            <Text pb={3}>If you want to make finer edits, highlight the text you'd like to change to access the pop-up below:</Text>
+            <Text pb={3}>
+              If you want to make finer edits, highlight the text you'd like to change to access the pop-up below:
+            </Text>
             <VStack m={3} gap={1} borderRadius='lg'>
               <Box layerStyle='cardLg' p={3}>
                 <Text fontSize='sm' textAlign='center'>

@@ -7,18 +7,22 @@ import { EditPopover } from './components/Popover';
 import { useLocation } from 'react-router-dom';
 import useAuth from '@wasp/auth/useAuth';
 
-export const TextareaContext = createContext({ textareaState: '', setTextareaState: (value: string) => { } });
+export const TextareaContext = createContext({ textareaState: '', setTextareaState: (value: string) => { }, isLnPayPending: false, setIsLnPayPending: (value: boolean) => { }});
 
 export default function App({ children }: { children: ReactNode }) {
   const [tooltip, setTooltip] = useState<{ x: string; y: string; text: string } | null>(null);
   const [currentText, setCurrentText] = useState<string | null>(null);
   const [textareaState, setTextareaState] = useState<string>('');
+  const [isLnPayPending, setIsLnPayPending] = useState<boolean>(false);
 
   const location = useLocation();
 
   const { data: user } = useAuth();
 
   useEffect(() => {
+    if (isLnPayPending) {
+      return;
+    }
     if (!location.pathname.includes('cover-letter')) {
       setTooltip(null);
     }
@@ -56,13 +60,15 @@ export default function App({ children }: { children: ReactNode }) {
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('mousedown', handleMouseDown);
     };
-  }, [tooltip, location]);
+  }, [tooltip, location, isLnPayPending]);
 
   return (
     <ChakraProvider theme={theme}>
       <TextareaContext.Provider value={{
         textareaState,
-        setTextareaState
+        setTextareaState,
+        isLnPayPending,
+        setIsLnPayPending
       }}>
         <Box
           top={tooltip?.y}
