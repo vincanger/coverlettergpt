@@ -77,7 +77,7 @@ export const stripeWebhook: StripeWebhook = async (request, response, context) =
           datePaid: new Date(),
         },
       });
-    } else if (event.type === 'invoice.paymnent_failed') {
+    } else if (event.type === 'invoice.payment_failed') {
       await context.entities.User.updateMany({
         where: {
           stripeId: userStripeId,
