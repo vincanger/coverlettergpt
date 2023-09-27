@@ -2,7 +2,15 @@ import { extendTheme } from '@chakra-ui/react';
 import { StyleFunctionProps } from '@chakra-ui/theme-tools';
 import { textStyles, fonts } from './text';
 import { semanticTokens } from './tokens';
-import { Input as ChakraInput, Button as ChakraButton, Textarea as ChakraTextarea, Checkbox as ChakraCheckbox, AlertDialog as ChakraAlertDialog } from '@chakra-ui/react';
+import {
+  Input as ChakraInput,
+  Button as ChakraButton,
+  Textarea as ChakraTextarea,
+  Checkbox as ChakraCheckbox,
+  AlertDialog as ChakraAlertDialog,
+  Select as ChakraSelect,
+  Radio as ChakraRadio,
+} from '@chakra-ui/react';
 
 const variantSolid = (props: any) => {
   const { colorScheme: c } = props;
@@ -83,10 +91,9 @@ export const Checkbox = {
       _disabled: {
         bg: 'bg-contrast-xs',
       },
-    }
-  }
+    },
+  },
 };
-
 
 ChakraInput.defaultProps = {
   ...ChakraInput.defaultProps,
@@ -117,7 +124,7 @@ export const Input = {
           color: 'text-contrast-sm',
           fontSize: 'sm',
         },
-      }
+      },
     },
   },
 };
@@ -154,6 +161,39 @@ export const Textarea = {
   },
 };
 
+ChakraSelect.defaultProps = {
+  ...ChakraSelect.defaultProps,
+  variant: 'outline',
+  border: 'sm',
+  borderColor: 'border-contrast-xs',
+  bg: 'bg-contrast-sm',
+
+  _hover: {
+    bg: 'bg-contrast-md',
+    borderColor: 'border-contrast-sm',
+  },
+  _focus: {
+    boxShadow: 'none',
+    borderColor: 'active',
+  },
+  // _disabled: {
+  //   bg: 'bg-contrast-xs',
+  // },
+  _placeholder: {
+    // color: 'white',
+    fontSize: 'sm',
+    color: 'text-contrast-sm',
+  },
+};
+
+ChakraRadio.defaultProps = {
+  ...ChakraRadio.defaultProps,
+  colorScheme: 'purple',
+  border: 'md',
+  borderColor: 'border-contrast-sm',
+};
+
+
 export const Link = {
   baseStyle: {
     transition: 'all 0.1s ease-in-out',
@@ -186,8 +226,6 @@ export const styles = {
     },
   }),
 };
-
-
 
 export const theme = extendTheme({
   components: {

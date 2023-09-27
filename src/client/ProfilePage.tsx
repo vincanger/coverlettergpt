@@ -25,7 +25,7 @@ export default function ProfilePage({ user }: { user: User }) {
         getQuerySpecifier: ({ id }) => [getUserInfo, { id }],
         updateQuery: ({ notifyPaymentExpires }, oldData) => ({ ...oldData, notifyPaymentExpires }),
       } as OptimisticUpdateDefinition<
-        Pick<User, 'id' | 'notifyPaymentExpires'>,
+        Partial<Pick<User, 'id' | 'notifyPaymentExpires'>>,
         Pick<User, 'id' | 'email' | 'hasPaid' | 'notifyPaymentExpires' | 'credits'> & { letters: CoverLetter[] }
       >,
     ],
@@ -71,7 +71,7 @@ export default function ProfilePage({ user }: { user: User }) {
 
               <Text textAlign='initial'>
                 You have unlimited access to CoverLetterGPT using{' '}
-                {user.gptModel === 'gpt-3.5-turbo' ? 'GPT-3' : 'GPT-4'} until:
+                {user.gptModel === 'gpt-4' ? 'GPT-4' : 'GPT-3.5'} until:
               </Text>
 
               <Code alignSelf='center' fontSize='lg'>

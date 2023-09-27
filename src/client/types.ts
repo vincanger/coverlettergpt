@@ -8,6 +8,7 @@ export type CoverLetterPayload = {
   isCompleteCoverLetter: boolean;
   includeWittyRemark: boolean;
   temperature: number;
+  gptModel: string;
 };
 
 export type JobPayload = Pick<Job, 'title' | 'company' | 'location' | 'description'>;

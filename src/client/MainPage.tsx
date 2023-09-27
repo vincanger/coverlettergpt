@@ -18,6 +18,8 @@ import {
   SliderTrack,
   SliderFilledTrack,
   SliderThumb,
+  RadioGroup,
+  Radio,
   Tooltip,
   useDisclosure,
 } from '@chakra-ui/react';
@@ -63,7 +65,7 @@ function MainPage() {
     data: job,
     isLoading: isJobLoading,
     error: getJobError,
-  } = useQuery(getJob, { id: jobToFetch }, { enabled: !!jobIdParam });
+  } = useQuery(getJob, { id: jobToFetch }, { enabled: jobToFetch.length > 0 });
 
   const { data: coverLetterCount } = useQuery(getCoverLetterCount);
 
@@ -84,6 +86,8 @@ function MainPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    console.log('job id param', jobIdParam);
+    console.log('job error', getJobError);
     if (jobIdParam) {
       setJobToFetch(jobIdParam);
       setIsCoverLetterUpdate(true);
@@ -225,6 +229,7 @@ function MainPage() {
         isCompleteCoverLetter,
         includeWittyRemark: values.includeWittyRemark,
         temperature: creativityValue,
+        gptModel: values.gptModel || 'gpt-3.5',
       };
 
       setLoadingText();
@@ -267,16 +272,14 @@ function MainPage() {
         isCompleteCoverLetter,
         temperature: creativityValue,
         includeWittyRemark: values.includeWittyRemark,
+        gptModel: values.gptModel || 'gpt-3.5',
       };
 
       setLoadingText();
 
-      const updatedJob = await updateCoverLetter(payload);
+      const coverLetterId = await updateCoverLetter(payload);
 
-      if (updatedJob.coverLetter.length === 0) {
-        throw new Error('Cover letter not found');
-      }
-      history.push(`/cover-letter/${updatedJob.coverLetter[updatedJob.coverLetter.length - 1].id}`);
+      history.push(`/cover-letter/${coverLetterId}`);
     } catch (error: any) {
       alert(`${error?.message ?? 'Something went wrong, please try again'}`);
       console.error(error);
@@ -306,7 +309,7 @@ function MainPage() {
   function checkUsageNumbers(): Boolean {
     if (user) {
       if (user.isUsingLn) {
-        if (user.credits < 3 && user.credits > 0) { 
+        if (user.credits < 3 && user.credits > 0) {
           onOpen();
         }
         return true;
@@ -471,6 +474,46 @@ function MainPage() {
                   </FormHelperText>
                 </VStack>
               </FormControl>
+              {user?.gptModel === 'gpt-4' && (
+                <FormControl>
+                  <VStack
+                    border={'sm'}
+                    bg='bg-contrast-sm'
+                    p={3}
+                    alignItems='flex-start'
+                    _hover={{
+                      bg: 'bg-contrast-md',
+                      borderColor: 'border-contrast-md',
+                    }}
+                    transition={
+                      'transform 0.05s ease-in, transform 0.05s ease-out, background 0.3s, opacity 0.3s, border 0.3s'
+                    }
+                  >
+                    <RadioGroup
+                      id='gptModel'
+                      defaultValue='gpt-4'
+                      color='text-contrast-lg'
+                      fontWeight='semibold'
+                      size='md'
+                    >
+                      <HStack spacing={5}>
+                        <Radio {...register('gptModel')} value='gpt-3.5'>
+                          GPT 3.5
+                        </Radio>
+                        <Radio {...register('gptModel')} value='gpt-4'>
+                          GPT 4
+                        </Radio>
+                      </HStack>
+                    </RadioGroup>
+
+                    <FormHelperText>
+                      <Text fontSize='xs' color='text-contrast-md'>
+                        If you are getting a token limit error, try using GPT 3.5.
+                      </Text>
+                    </FormHelperText>
+                  </VStack>
+                </FormControl>
+              )}
               <VStack
                 border={'sm'}
                 bg='bg-contrast-sm'
@@ -578,7 +621,13 @@ function MainPage() {
           )}
         </form>
       </BorderBox>
-      <LeaveATip isOpen={isOpen} onOpen={onOpen} onClose={onClose} credits={user?.credits || 0} isUsingLn={user?.isUsingLn || false} />
+      <LeaveATip
+        isOpen={isOpen}
+        onOpen={onOpen}
+        onClose={onClose}
+        credits={user?.credits || 0}
+        isUsingLn={user?.isUsingLn || false}
+      />
       <LoginToBegin isOpen={loginIsOpen} onOpen={loginOnOpen} onClose={loginOnClose} />
       <LnPaymentModal isOpen={lnPaymentIsOpen} onClose={lnPaymentOnClose} lightningInvoice={lightningInvoice} />
     </>

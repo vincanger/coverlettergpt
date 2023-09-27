@@ -4,6 +4,8 @@ app applyai {
   },
   title: "CoverLetterGPT",
   head: [
+        "<meta property=\"title\" content=\"CoverLetterGPT\" />",
+        "<meta property=\"description\" content=\"Create Unique Cover Letters Based on Your Skills using GPT. Supercharge Your Job Search.\" />",
         "<meta property=\"og:title\" content=\"CoverLetterGPT\" />",
         "<meta property=\"og:description\" content=\"Create Unique Cover Letters Based on Your Skills using GPT. Supercharge Your Job Search.\" />",
         "<meta property=\"og:type\" content=\"website\" />",
@@ -31,7 +33,7 @@ app applyai {
   },
   client: {
     rootComponent: import App from "@client/App",
-    setupFn: import clientSetup from "@client/clientSetup.js"
+    setupFn: import clientSetup from "@client/clientSetup"
   },
   emailSender: {
     provider: SendGrid,
