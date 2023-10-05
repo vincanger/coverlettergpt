@@ -221,6 +221,8 @@ function MainPage() {
 
       const creativityValue = convertToSliderValue(sliderValue);
 
+      console.log('values >>>', values)
+
       const payload: CoverLetterPayload = {
         jobId: job.id,
         title: job.title,
@@ -231,6 +233,8 @@ function MainPage() {
         temperature: creativityValue,
         gptModel: values.gptModel || 'gpt-3.5',
       };
+
+      console.log('payload >>>', payload)
 
       setLoadingText();
 

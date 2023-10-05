@@ -393,6 +393,7 @@ export const updateUser: UpdateUser<UpdateUserArgs, UserWithoutPassword> = async
       credits: true,
       gptModel: true,
       isUsingLn: true,
+      subscriptionStatus: true,
     },
   });
 };
