@@ -5,11 +5,11 @@ import { TextareaContext } from '../App';
 import { LeaveATip } from './AlertDialog';
 import getUserInfo from '@wasp/queries/getUserInfo';
 import { useQuery } from '@wasp/queries';
-import type { User } from '@wasp/entities';
+import type { User, LnPayment } from '@wasp/entities';
 import LnPaymentModal from './LnPaymentModal';
 import { fetchLightningInvoice } from '../lightningUtils';
 import type { LightningInvoice } from '../lightningUtils';
-import lnPaymentStatus from '@wasp/actions/lnPaymentStatus';
+import updateLnPayment from '@wasp/actions/updateLnPayment';
 
 interface EditPopoverProps extends ButtonGroupProps {
   selectedText?: string;
@@ -26,41 +26,38 @@ export function EditPopover({ setTooltip, selectedText, user, ...props }: EditPo
   const { isOpen: isPayOpen, onOpen: onPayOpen, onClose: onPayClose } = useDisclosure();
   const { isOpen: lnPaymentIsOpen, onOpen: lnPaymentOnOpen, onClose: lnPaymentOnClose } = useDisclosure();
 
-  async function payWithLn(user: Omit<User, 'password'>): Promise<boolean> {
-    if (user.isUsingLn && user.credits === 0) {
-      try {
-        setIsLnPayPending(true);
+  async function checkIfLnAndPay(user: Omit<User, 'password'>): Promise<LnPayment | null> {
+    try {
+      if (user.isUsingLn && user.credits === 0) {
         const invoice = await fetchLightningInvoice();
+        let lnPayment: LnPayment;
         if (invoice) {
           invoice.status = 'pending';
-          await lnPaymentStatus(invoice);
+          lnPayment = await updateLnPayment(invoice);
           setLightningInvoice(invoice);
           lnPaymentOnOpen();
         } else {
-          alert('Something went wrong, please try again');
-          return false;
+          throw new Error('fetching lightning invoice failed');
         }
 
         let status = invoice.status;
         while (status === 'pending') {
-          status = await lnPaymentStatus(invoice);
+          lnPayment = await updateLnPayment(invoice);
+          status = lnPayment.status;
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
         if (status !== 'success') {
-          alert('Something went wrong, please try again');
-          return false;
+          throw new Error('payment failed');
         }
-        return true;
-      } catch (error) {
-        alert('Something went wrong, please try again');
-      } finally {
-        setIsLnPayPending(false);
+        return lnPayment;
       }
+    } catch (error) {
+      console.error('Error processing payment, please try again');
+      return null;
     }
-    return true;
   }
 
-  const replaceSelectedText = async ({ improvement }: { improvement: string }) => {
+  const replaceSelectedText = async ({ improvement, lnPayment }: { improvement: string, lnPayment: LnPayment }) => {
     const selection = window.getSelection();
     let loadingInterval;
 
@@ -85,7 +82,7 @@ export function EditPopover({ setTooltip, selectedText, user, ...props }: EditPo
         }
       }, 750);
 
-      const newValue = await generateEdit({ content: selectString, improvement });
+      const newValue = await generateEdit({ content: selectString, improvement, lnPayment });
 
       clearInterval(loadingInterval);
       setTextareaState(value);
@@ -98,10 +95,10 @@ export function EditPopover({ setTooltip, selectedText, user, ...props }: EditPo
         value.slice(index + selectString.length);
 
       setTextareaState(newText);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       clearInterval(loadingInterval);
-      alert('An error has occurred');
+      alert(error?.message ?? 'An error has occurred');
     }
   };
 
@@ -112,18 +109,18 @@ export function EditPopover({ setTooltip, selectedText, user, ...props }: EditPo
       window.getSelection()?.removeAllRanges();
       return;
     }
+    let lnPayment: LnPayment | undefined;
     if (userInfo?.isUsingLn) {
       if (userInfo.credits > 0) {
         onPayOpen();
       }
       try {
-        const didUserPay = await payWithLn(user);
-        if (!didUserPay) return;
+        lnPayment = await checkIfLnAndPay(user);
       } catch (error) {
         console.error('error paying with ln: ', error);
       }
     }
-    replaceSelectedText({ improvement: value });
+    replaceSelectedText({ improvement: value, lnPayment });
     window.getSelection()?.removeAllRanges();
   };
 

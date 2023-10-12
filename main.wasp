@@ -199,7 +199,7 @@ page CheckoutPage {
 
 action generateCoverLetter {
   fn: import { generateCoverLetter } from "@server/actions.js",
-  entities: [CoverLetter, User]
+  entities: [CoverLetter, User, LnPayment]
 }
 
 action createJob {
@@ -214,12 +214,12 @@ action updateJob {
 
 action updateCoverLetter {
   fn: import { updateCoverLetter } from "@server/actions.js",
-  entities: [Job, CoverLetter, User]
+  entities: [Job, CoverLetter, User, LnPayment]
 }
 
 action generateEdit {
   fn: import { generateEdit } from "@server/actions.js",
-  entities: [CoverLetter, User]
+  entities: [CoverLetter, User, LnPayment]
 }
 
 action editCoverLetter {
@@ -261,8 +261,8 @@ action decodeInvoice {
   fn: import { decodeInvoice } from "@server/ln.js",
 }
 
-action lnPaymentStatus {
-  fn: import { lnPaymentStatus } from "@server/ln.js",
+action updateLnPayment {
+  fn: import { updateLnPayment } from "@server/ln.js",
   entities: [LnPayment]
 }
 

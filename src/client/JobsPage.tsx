@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Heading,
   Spacer,
@@ -28,12 +28,19 @@ import BorderBox from './components/BorderBox';
 import { useHistory } from 'react-router-dom';
 import { DeleteJob } from './components/AlertDialog';
 import { FiDelete } from 'react-icons/fi';
+import type { User } from '@wasp/entities';
 
-function JobsPage() {
+function JobsPage({ user }: { user: User }) {
   const [jobId, setJobId] = useState<string>('');
   const [descriptionText, setDescriptionText] = useState<string | null>(null);
 
   const history = useHistory();
+
+  useEffect(() => {
+    if (user.subscriptionStatus === 'past_due') {
+      history.push('/profile');
+    }
+  }, [user.subscriptionStatus]);
 
   const { data: jobs, isLoading, error } = useQuery(getJobs);
   const { data: coverLetter } = useQuery(getCoverLetters, { id: jobId }, { enabled: jobId.length > 0 });

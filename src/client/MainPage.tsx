@@ -32,7 +32,6 @@ import { ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@wasp/queries';
 import { useHistory } from 'react-router-dom';
-import type { CoverLetterPayload } from './types';
 import getJob from '@wasp/queries/getJob';
 import getCoverLetterCount from '@wasp/queries/getCoverLetterCount';
 import generateCoverLetter from '@wasp/actions/generateCoverLetter';
@@ -43,8 +42,8 @@ import ThemeSwitch from './components/ThemeSwitch';
 import LnPaymentModal from './components/LnPaymentModal';
 import { fetchLightningInvoice } from './lightningUtils';
 import type { LightningInvoice } from './lightningUtils';
-import lnPaymentStatus from '@wasp/actions/lnPaymentStatus';
-import { User } from '@wasp/entities';
+import updateLnPayment from '@wasp/actions/updateLnPayment';
+import { User, LnPayment } from '@wasp/entities';
 
 function MainPage() {
   const [isPdfReady, setIsPdfReady] = useState<boolean>(false);
@@ -55,7 +54,7 @@ function MainPage() {
   const [showTooltip, setShowTooltip] = useState(false);
   const [lightningInvoice, setLightningInvoice] = useState<LightningInvoice | null>(null);
 
-  const { data: user, isLoading: isUserLoading } = useAuth();
+  const { data: user } = useAuth();
 
   const history = useHistory();
   const urlParams = new URLSearchParams(window.location.search);
@@ -82,12 +81,11 @@ function MainPage() {
   const { isOpen: loginIsOpen, onOpen: loginOnOpen, onClose: loginOnClose } = useDisclosure();
   const { isOpen: lnPaymentIsOpen, onOpen: lnPaymentOnOpen, onClose: lnPaymentOnClose } = useDisclosure();
 
+  let setLoadingTextTimeout: ReturnType<typeof setTimeout>;
   const loadingTextRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    console.log('job id param', jobIdParam);
-    console.log('job error', getJobError);
     if (jobIdParam) {
       setJobToFetch(jobIdParam);
       setIsCoverLetterUpdate(true);
@@ -175,35 +173,48 @@ function MainPage() {
     }
   }
 
-  async function payWithLn(user: Omit<User, 'password'>): Promise<boolean> {
-    if (user.isUsingLn && user.credits === 0) {
-      const invoice = await fetchLightningInvoice();
-      if (invoice) {
-        invoice.status = 'pending';
-        await lnPaymentStatus(invoice);
-        setLightningInvoice(invoice);
-        lnPaymentOnOpen();
-      } else {
-        alert('Something went wrong, please try again');
-        return false;
-      }
-
-      let status = invoice.status;
-      while (status === 'pending') {
-        status = await lnPaymentStatus(invoice);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-      if (status !== 'success') {
-        alert('Something went wrong, please try again');
-        return false;
-      }
-      return true;
+  async function checkIfLnAndPay(user: Omit<User, 'password'>): Promise<LnPayment | null> {
+    try {
+      if (user.isUsingLn && user.credits === 0) {
+        const invoice = await fetchLightningInvoice();
+        let lnPayment: LnPayment;
+        if (invoice) {
+          invoice.status = 'pending';
+          lnPayment = await updateLnPayment(invoice);
+          setLightningInvoice(invoice);
+          lnPaymentOnOpen();
+        } else {
+          throw new Error('fetching lightning invoice failed');
+        }
+  
+        let status = invoice.status;
+        while (status === 'pending') {
+          lnPayment = await updateLnPayment(invoice);
+          status = lnPayment.status;
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+        if (status !== 'success') {
+          throw new Error('payment failed');
+        }
+        return lnPayment;
+      } 
+    } catch (error) {
+      console.error('Error processing payment, please try again');
+      return null;
     }
-    return true;
+  }
+
+  function checkIfSubPastDueAndRedirect(user: Omit<User, 'password'>) {
+    if (user.subscriptionStatus === 'past_due') {
+      history.push('/profile')
+      return true;
+    } else {
+      return false;
+    }
   }
 
   async function onSubmit(values: any): Promise<void> {
-    let canUserContinue = checkUsageNumbers();
+    let canUserContinue = hasUserPaidOrActiveTrial();
     if (!user) {
       history.push('/login');
       return;
@@ -214,16 +225,16 @@ function MainPage() {
     }
 
     try {
-      const didUserPay = await payWithLn(user);
-      if (!didUserPay) return;
+      const lnPayment = await checkIfLnAndPay(user);
+
+      const isSubscriptionPastDue = checkIfSubPastDueAndRedirect(user);
+      if (isSubscriptionPastDue) return;
 
       const job = await createJob(values);
 
       const creativityValue = convertToSliderValue(sliderValue);
 
-      console.log('values >>>', values)
-
-      const payload: CoverLetterPayload = {
+      const payload = {
         jobId: job.id,
         title: job.title,
         content: values.pdf,
@@ -232,9 +243,8 @@ function MainPage() {
         includeWittyRemark: values.includeWittyRemark,
         temperature: creativityValue,
         gptModel: values.gptModel || 'gpt-3.5',
+        lnPayment: lnPayment || undefined,
       };
-
-      console.log('payload >>>', payload)
 
       setLoadingText();
 
@@ -242,13 +252,14 @@ function MainPage() {
 
       history.push(`/cover-letter/${coverLetter.id}`);
     } catch (error: any) {
+      cancelLoadingText();
       alert(`${error?.message ?? 'Something went wrong, please try again'}`);
       console.error(error);
     }
   }
 
   async function onUpdate(values: any): Promise<void> {
-    const canUserContinue = checkUsageNumbers();
+    const canUserContinue = hasUserPaidOrActiveTrial();
     if (!user) {
       history.push('/login');
       return;
@@ -259,17 +270,17 @@ function MainPage() {
     }
 
     try {
-      const didUserPay = await payWithLn(user);
-      if (!didUserPay) return;
+      const lnPayment = await checkIfLnAndPay(user);
+
+      const isSubscriptionPastDue = checkIfSubPastDueAndRedirect(user);
+      if (isSubscriptionPastDue) return;
 
       if (!job) {
         throw new Error('Job not found');
       }
 
       const creativityValue = convertToSliderValue(sliderValue);
-      let payload;
-
-      payload = {
+      const payload = {
         id: job.id,
         description: values.description,
         content: values.pdf,
@@ -277,6 +288,7 @@ function MainPage() {
         temperature: creativityValue,
         includeWittyRemark: values.includeWittyRemark,
         gptModel: values.gptModel || 'gpt-3.5',
+        lnPayment: lnPayment || undefined,
       };
 
       setLoadingText();
@@ -285,6 +297,7 @@ function MainPage() {
 
       history.push(`/cover-letter/${coverLetterId}`);
     } catch (error: any) {
+      cancelLoadingText();
       alert(`${error?.message ?? 'Something went wrong, please try again'}`);
       console.error(error);
     }
@@ -298,19 +311,18 @@ function MainPage() {
     }
   }
 
-  async function setLoadingText() {
-    setTimeout(() => {
-      loadingTextRef.current && (loadingTextRef.current.innerText = 'patience, my friend...');
-    }, 1000);
-    setTimeout(() => {
-      loadingTextRef.current && (loadingTextRef.current.innerText = 'almost done...');
-    }, 8000);
-    setTimeout(() => {
-      loadingTextRef.current && (loadingTextRef.current.innerText = '🧘...');
-    }, 12000);
+  function setLoadingText() {
+    setLoadingTextTimeout = setTimeout(() => {
+      loadingTextRef.current && (loadingTextRef.current.innerText = ' patience, my friend 🧘...');
+    }, 2000);
   }
 
-  function checkUsageNumbers(): Boolean {
+  function cancelLoadingText() {
+    clearTimeout(setLoadingTextTimeout);
+    loadingTextRef.current && (loadingTextRef.current.innerText = '');
+  }
+
+  function hasUserPaidOrActiveTrial(): Boolean {
     if (user) {
       if (user.isUsingLn) {
         if (user.credits < 3 && user.credits > 0) {

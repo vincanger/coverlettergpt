@@ -16,7 +16,7 @@ import QRCode from 'qrcode.react';
 import { useEffect, useRef, useState } from 'react';
 import milliSatsToCents from '@wasp/actions/milliSatsToCents';
 import decodeInvoice from '@wasp/actions/decodeInvoice';
-import lnPaymentStatus from '@wasp/actions/lnPaymentStatus';
+import updateLnPayment from '@wasp/actions/updateLnPayment';
 
 type LightningInvoice = {
   status: string;
@@ -56,7 +56,7 @@ export default function LnPaymentModal({ lightningInvoice, isOpen, onClose }: In
     if (status !== 'success') {
       if (lightningInvoice) {
         lightningInvoice.status = 'failed';
-        await lnPaymentStatus(lightningInvoice);
+        await updateLnPayment(lightningInvoice);
       }
     }
     if (interval) clearInterval(interval);
@@ -101,7 +101,7 @@ export default function LnPaymentModal({ lightningInvoice, isOpen, onClose }: In
           setStatus('success');
 
           lightningInvoice.status = 'success';
-          await lnPaymentStatus(lightningInvoice);
+          await updateLnPayment(lightningInvoice);
           clearInterval(interval);
           setTimeout(() => {
             setStatus('');
@@ -114,7 +114,7 @@ export default function LnPaymentModal({ lightningInvoice, isOpen, onClose }: In
         setStatus('error');
 
         lightningInvoice.status = 'failed';
-        await lnPaymentStatus(lightningInvoice);
+        await updateLnPayment(lightningInvoice);
         setErrorMessage('Failed to verify payment.');
         clearInterval(interval);
       }
