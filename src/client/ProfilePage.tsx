@@ -1,5 +1,5 @@
 import BorderBox from './components/BorderBox';
-import { Heading, Text, Button, Code, Spinner, Checkbox, VStack, HStack, Link } from '@chakra-ui/react';
+import { Box, Heading, Text, Button, Code, Spinner, Checkbox, VStack, HStack, Link } from '@chakra-ui/react';
 import { CoverLetter, User } from '@wasp/entities';
 import { useQuery } from '@wasp/queries';
 import getUserInfo from '@wasp/queries/getUserInfo';
@@ -9,6 +9,7 @@ import stripePayment from '@wasp/actions/stripePayment';
 import stripeGpt4Payment from '@wasp/actions/stripeGpt4Payment';
 import logout from '@wasp/auth/logout';
 import { useAction, OptimisticUpdateDefinition } from '@wasp/actions';
+import { IoWarningOutline } from 'react-icons/io5';
 
 export default function ProfilePage({ user }: { user: User }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -64,14 +65,25 @@ export default function ProfilePage({ user }: { user: User }) {
       {!!userInfo ? (
         <>
           <Heading size='md'>👋 Hi {userInfo.email || 'There'} </Heading>
-
-          {userInfo.hasPaid && !userInfo.isUsingLn ? (
+          {userInfo.subscriptionStatus === 'past_due' ? (
+            <VStack gap={3} py={5} alignItems='center'>
+              <Box color='purple.400'>
+                <IoWarningOutline size={30} color='inherit' />
+              </Box>
+              <Text textAlign='center' fontSize='sm' textColor='text-contrast-lg'>
+                Your subscription is past due. <br/> Please update your payment method{' '}
+                <Link textColor='purple.400' href='https://billing.stripe.com/p/login/5kA7sS0Wc3gD2QM6oo'>
+                  by clicking here
+                </Link>
+              </Text>
+            </VStack>
+          ) : userInfo.hasPaid && !userInfo.isUsingLn ? (
             <VStack gap={3} pt={5} alignItems='flex-start'>
               <Text textAlign='initial'>Thanks so much for your support!</Text>
 
               <Text textAlign='initial'>
-                You have unlimited access to CoverLetterGPT using{' '}
-                {user.gptModel === 'gpt-4' ? 'GPT-4' : 'GPT-3.5'} until:
+                You have unlimited access to CoverLetterGPT using {user.gptModel === 'gpt-4' ? 'GPT-4' : 'GPT-3.5'}{' '}
+                until:
               </Text>
 
               <Code alignSelf='center' fontSize='lg'>

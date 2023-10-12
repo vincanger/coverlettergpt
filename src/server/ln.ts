@@ -1,12 +1,12 @@
 import { randomBytes, createHash as cryptoCreateHash } from 'crypto';
-import type { GetLnLoginUrl, DecodeInvoice, LnPaymentStatus, MilliSatsToCents } from '@wasp/actions/types';
+import type { GetLnLoginUrl, DecodeInvoice, UpdateLnPayment, MilliSatsToCents } from '@wasp/actions/types';
 import type { GetLnUserInfo } from '@wasp/queries/types';
 //@ts-ignore
 import lnurl from 'lnurl';
 //@ts-ignore
 import jwt from 'jsonwebtoken';
 import type { LnLogin } from '@wasp/apis/types';
-import { LnData } from '@wasp/entities';
+import { LnData, LnPayment } from '@wasp/entities';
 import bolt11 from 'bolt11';
 import HttpError from '@wasp/core/HttpError.js';
 import axios from 'axios';
@@ -139,7 +139,7 @@ export const decodeInvoice: DecodeInvoice<string, DecodedInvoice> = async (pr, _
   return invoice;
 };
 
-type LightningInvoice = {
+export type LightningInvoice = {
   status: string;
   successAction: {
     tag: string;
@@ -149,7 +149,7 @@ type LightningInvoice = {
   pr: string;
 };
 
-export const lnPaymentStatus: LnPaymentStatus<LightningInvoice, string> = async (invoice, context) => {
+export const updateLnPayment: UpdateLnPayment<LightningInvoice, LnPayment> = async (invoice, context) => {
   if (!context.user) {
     throw new HttpError(401);
   }
@@ -168,7 +168,7 @@ export const lnPaymentStatus: LnPaymentStatus<LightningInvoice, string> = async 
     },
   });
 
-  return updatedInvoice.status;
+  return updatedInvoice
 };
 
 const getBitcoinPrice = async () => {
