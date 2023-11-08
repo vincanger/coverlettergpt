@@ -403,7 +403,7 @@ export const updateUser: UpdateUser<UpdateUserArgs, UserWithoutPassword> = async
     throw new HttpError(401);
   }
 
-  return context.entities.User.update({
+  const user = await context.entities.User.update({
     where: {
       id: context.user.id,
     },
@@ -411,30 +411,14 @@ export const updateUser: UpdateUser<UpdateUserArgs, UserWithoutPassword> = async
       notifyPaymentExpires,
       gptModel,
     },
-    select: {
-      id: true,
-      email: true,
-      username: true,
-      hasPaid: true,
-      datePaid: true,
-      notifyPaymentExpires: true,
-      checkoutSessionId: true,
-      stripeId: true,
-      credits: true,
-      gptModel: true,
-      isUsingLn: true,
-      subscriptionStatus: true,
-    },
   });
+
+  if (!user) {
+    throw new HttpError(404, 'User not found');
+  }
+  const { password, ...userWithoutPassword } = user;
+  return userWithoutPassword;
 };
-
-type UpdateUserResult = Pick<User, 'id' | 'email' | 'hasPaid'>;
-
-function dontUpdateUser(user: UserWithoutPassword): Promise<UserWithoutPassword> {
-  return new Promise((resolve) => {
-    resolve(user);
-  });
-}
 
 type StripePaymentResult = {
   sessionUrl: string | null;

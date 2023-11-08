@@ -25,6 +25,19 @@ app applyai {
         getUserFieldsFn: import { getUserFields } from "@server/auth.js",
         configFn: import { config } from "@server/auth.js",
       },
+      email: {
+        fromField: {
+          name: "CoverLetterGPT",
+          email: "vince@wasp-lang.dev",
+        },
+        emailVerification: {
+          clientRoute: EmailVerificationRoute,
+        },
+        passwordReset: {
+          clientRoute: PasswordResetRoute,
+        },
+        allowUnverifiedLogin: false,
+      },
     },
     onAuthFailedRedirectTo: "/",
   },
@@ -67,9 +80,12 @@ app applyai {
 
 entity User {=psl
   id                        Int                  @id @default(autoincrement())
-  username                  String               @unique
-  password                  String
-  email                     String?
+  username                  String?              
+  email                     String?              @unique
+  password                  String?
+  isEmailVerified           Boolean              @default(false)
+  emailVerificationSentAt   DateTime?
+  passwordResetSentAt       DateTime?
   hasPaid                   Boolean              @default(false)
   isUsingLn                 Boolean              @default(false)
   gptModel                  String               @default("gpt-3.5-turbo")
@@ -173,6 +189,11 @@ page LoginPage {
   component: import Login from "@client/LoginPage"
 }
 
+route EmailSignupRoute { path: "/email-signup", to: EmailSignupPage }
+page EmailSignupPage {
+  component: import { EmailSignupForm } from "@client/Auth"
+}
+
 route JobsRoute { path: "/jobs", to: JobsPage }
 page JobsPage {
   authRequired: true,
@@ -189,6 +210,26 @@ route CheckoutRoute { path: "/checkout", to: CheckoutPage }
 page CheckoutPage {
   authRequired: true,
   component: import Checkout from "@client/CheckoutPage"
+}
+
+route RequestPasswordResetRoute { path: "/request-password-reset", to: RequestPasswordResetPage }
+page RequestPasswordResetPage {
+  component: import { RequestPasswordReset } from "@client/auth.tsx",
+}
+
+route PasswordResetRoute { path: "/password-reset", to: PasswordResetPage }
+page PasswordResetPage {
+  component: import { PasswordReset } from "@client/auth.tsx",
+}
+
+route EmailVerificationRoute { path: "/email-verification", to: EmailVerificationPage }
+page EmailVerificationPage {
+  component: import { EmailVerification } from "@client/auth.tsx",
+}
+
+route TermsOfServiceRoute { path: "/tos", to: TermsOfServicePage }
+page TermsOfServicePage {
+  component: import TermsOfService from "@client/Tos"
 }
 
 /* ⛑ These are the Wasp Operations, which allow the client and server to interact:

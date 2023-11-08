@@ -198,6 +198,7 @@ function MainPage() {
         }
         return lnPayment;
       } 
+      return null;
     } catch (error) {
       console.error('Error processing payment, please try again');
       return null;
@@ -223,6 +224,8 @@ function MainPage() {
       history.push('/profile');
       return;
     }
+
+    console.log('gpt Model >>>>>',  values.gptModel)
 
     try {
       const lnPayment = await checkIfLnAndPay(user);
