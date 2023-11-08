@@ -168,11 +168,10 @@ export const updateLnPayment: UpdateLnPayment<LightningInvoice, LnPayment> = asy
     },
   });
 
-  return updatedInvoice
+  return updatedInvoice;
 };
 
 const getBitcoinPrice = async () => {
-
   let response = null;
 
   try {
@@ -200,11 +199,11 @@ const getBitcoinPrice = async () => {
 //   return cents * milliSatsPerDollar;
 // };
 
-export const milliSatsToCents: MilliSatsToCents<{milliSats: number}, number> = async ({milliSats}, _context) => {
+export const milliSatsToCents: MilliSatsToCents<{ milliSats: number }, number> = async ({ milliSats }, _context) => {
   const bitcoinPrice = await getBitcoinPrice();
   if (bitcoinPrice === null) return 0;
 
-  const dollarsPerSat = bitcoinPrice / 100_000_000; // 
+  const dollarsPerSat = bitcoinPrice / 100_000_000; //
   const centsPerDollar = (milliSats / 1000) * dollarsPerSat;
   return centsPerDollar;
 };
