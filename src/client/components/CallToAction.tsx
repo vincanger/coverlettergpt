@@ -1,33 +1,18 @@
-import { VStack, HStack, Button, Text, Link, Divider } from '@chakra-ui/react';
+import { VStack, HStack, Text, Link, Divider } from '@chakra-ui/react';
 import { FaTwitter, FaGithub } from 'react-icons/fa';
 
-export function CallToAction() {
+export function Footer() {
   return (
-    <VStack width={['sm', 'lg', 'xl']} mt={10} textAlign='center' gap={4}>
+    <VStack width='full' py={5} textAlign='center' gap={4}>
       <Divider />
-      <HStack>
-        <Text color='text-contrast-sm' fontSize='sm' textAlign='start'>
-          This Project is Open-Source! Check Out the Code on
-        </Text>
-        <Link
-          href='https://github.com/vincanger/coverlettergpt'
-          color='purple.300'
-          target='_blank'
-          display='grid'
-          gridTemplateColumns='auto 1fr'
-          gridGap={2}
-          alignItems='center'
-        >
+      <HStack gap={3}>
+        <Link href='https://github.com/vincanger/coverlettergpt' color='purple.300' target='_blank'>
           <FaGithub />
-          GitHub
         </Link>
-      </HStack>
-      <HStack>
-        <a href='https://twitter.com/hot_town' target='_blank'>
-          <Button colorScheme='twitter' leftIcon={<FaTwitter />} size='sm'>
-            Follow me @hot_town
-          </Button>
-        </a>
+
+        <Link href='https://twitter.com/hot_town' target='_blank' color='purple.300'>
+          <FaTwitter />
+        </Link>
       </HStack>
     </VStack>
   );

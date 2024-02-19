@@ -38,7 +38,6 @@ import generateCoverLetter from '@wasp/actions/generateCoverLetter';
 import createJob from '@wasp/actions/createJob';
 import updateCoverLetter from '@wasp/actions/updateCoverLetter';
 import useAuth from '@wasp/auth/useAuth';
-import ThemeSwitch from './components/ThemeSwitch';
 import LnPaymentModal from './components/LnPaymentModal';
 import { fetchLightningInvoice } from './lightningUtils';
 import type { LightningInvoice } from './lightningUtils';
@@ -357,25 +356,23 @@ function MainPage() {
         py={2}
         mt={3}
         mb={-3}
+        bgColor='bg-contrast-overlay'
         visibility={!coverLetterCount ? 'hidden' : 'visible'}
-        _hover={{ bgColor: 'bg-contrast-md' }}
+        _hover={{ bgColor: 'bg-contrast-xs' }}
         transition='0.1s ease-in-out'
       >
-        <Text fontSize='md'>{coverLetterCount} Cover Letters Generated! 🎉</Text>
+        <Text fontSize='md'>{coverLetterCount?.toLocaleString()} Cover Letters Generated! 🎉</Text>
       </Box>
       <BorderBox>
         <form
           onSubmit={!isCoverLetterUpdate ? handleSubmit(onSubmit) : handleSubmit(onUpdate)}
           style={{ width: '100%' }}
         >
-          <HStack w='full' justifyContent='space-between' align='flex-start'>
-            <Heading size={'md'} alignSelf={'start'} mb={3}>
+
+            <Heading size={'md'} alignSelf={'start'} mb={3} w='full'>
               Job Info {isCoverLetterUpdate && <Code ml={1}>Editing...</Code>}
             </Heading>
-            <Button variant='link' border='0px'>
-              <ThemeSwitch />
-            </Button>
-          </HStack>
+
           {showSpinner && <Spinner />}
           {showForm && (
             <>
@@ -465,11 +462,11 @@ function MainPage() {
                 <VStack
                   border={!!formErrors.pdf ? '1px solid #FC8181' : 'sm'}
                   boxShadow={!!formErrors.pdf ? '0 0 0 1px #FC8181' : 'none'}
-                  bg='bg-contrast-sm'
+                  bg='bg-contrast-xs'
                   p={3}
                   alignItems='flex-start'
                   _hover={{
-                    bg: 'bg-contrast-md',
+                    bg: 'bg-contrast-sm',
                     borderColor: 'border-contrast-md',
                   }}
                   transition={
@@ -494,7 +491,7 @@ function MainPage() {
                 <FormControl>
                   <VStack
                     border={'sm'}
-                    bg='bg-contrast-sm'
+                    bg='bg-contrast-xs'
                     p={3}
                     alignItems='flex-start'
                     _hover={{
@@ -532,7 +529,7 @@ function MainPage() {
               )}
               <VStack
                 border={'sm'}
-                bg='bg-contrast-sm'
+                bg='bg-contrast-xs'
                 px={3}
                 alignItems='flex-start'
                 _hover={{
@@ -582,7 +579,7 @@ function MainPage() {
               </VStack>
               <VStack
                 border={'sm'}
-                bg='bg-contrast-sm'
+                bg='bg-contrast-xs'
                 px={3}
                 borderRadius={0}
                 borderBottomRadius={7}

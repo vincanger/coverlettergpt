@@ -42,6 +42,10 @@ export default function ModalElement({ coverLetterData, isOpen, onOpen, onClose 
     }
   };
 
+  const convertDateToLocaleString = (date: Date) => {
+    return date.toLocaleDateString() + ' - ' + date.toLocaleTimeString().split(':').slice(0, 2).join(':');
+  }
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} initialFocusRef={copyButtonRef}>
       <ModalOverlay backdropFilter='auto' backdropInvert='15%' backdropBlur='2px' />
@@ -57,7 +61,7 @@ export default function ModalElement({ coverLetterData, isOpen, onOpen, onClose 
             >
               {coverLetterData.map((coverLetter) => (
                 <option key={coverLetter.id} value={coverLetter.id}>
-                  {coverLetter.title} - {coverLetter.id}
+                  {coverLetter.title} - {convertDateToLocaleString(coverLetter.createdAt)}
                 </option>
               ))}
             </Select>

@@ -60,7 +60,7 @@ export function LeaveATip({
               <Text mt={4}>
                 {!isUsingLn ? (
                   <>
-                    Purchase unlimited access for only <Code>$4.95</Code> per month!
+                    Purchase unlimited access for only <Code>$2.95</Code> per month!
                   </>
                 ) : (
                   <>After, just pay a small fee per cover letter with your lightning ⚡️ wallet. </>
