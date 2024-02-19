@@ -4,11 +4,10 @@ app applyai {
   },
   title: "CoverLetterGPT",
   head: [
-        "<meta property=\"title\" content=\"CoverLetterGPT\" />",
-        "<meta property=\"description\" content=\"Create Unique Cover Letters Based on Your Skills using GPT. Supercharge Your Job Search.\" />",
-        "<meta property=\"og:title\" content=\"CoverLetterGPT\" />",
-        "<meta property=\"og:description\" content=\"Create Unique Cover Letters Based on Your Skills using GPT. Supercharge Your Job Search.\" />",
         "<meta property=\"og:type\" content=\"website\" />",
+        "<meta property=\"og:url\" content=\"https://CoverLetterGPT.xyz\" />",
+        "<meta property=\"og:title\" content=\"CoverLetterGPT\" />",
+        "<meta property=\"og:description\" content=\"Create Unique Cover Letters Based on Your Skills using GPT. Supercharge Your Job Search with Cover Letter GPT.\" />",
         "<meta property=\"og:image\" content=\"https://CoverLetterGPT.xyz/homepage.png\" />",
         "<meta name=\"twitter:image\" content=\"https://CoverLetterGPT.xyz/homepage.png\" />",
         "<meta name=\"twitter:image:width\" content=\"800\" />",
@@ -165,6 +164,7 @@ page MainPage {
 
 route CoverLetterPage { path: "/cover-letter/:id", to: CoverLetterPage }
 page CoverLetterPage {
+  authRequired: true,
   component: import CoverLetter from "@client/CoverLetterPage"
 }
 

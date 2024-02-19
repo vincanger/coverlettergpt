@@ -10,6 +10,7 @@ import {
   Menu,
   Text,
   StackProps,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { CgProfile } from 'react-icons/cg';
@@ -17,22 +18,25 @@ import { MdWorkOutline } from 'react-icons/md';
 import { AiOutlineMenu } from 'react-icons/ai';
 import useAuth from '@wasp/auth/useAuth';
 import { useRef } from 'react';
+import ThemeSwitch from './ThemeSwitch';
 
 export default function NavBar() {
   const { data: user } = useAuth();
+
+  const gptTextColor = useColorModeValue('purple.500', 'white');
+  const bgColor = useColorModeValue('whiteAlpha.900', 'blackAlpha.900');
 
   return (
     <HStack
       as='nav'
       align='center'
-      justify='center'
+      justify='between'
       px={7}
       py={4}
       top={0}
-      width='100%'
+      width='full'
       position='sticky'
-      bg='bg-contrast-sm'
-      // bg='rgba(0, 0, 0, 0.5)'
+      bg={bgColor}
       backdropFilter='blur(5px)'
       borderBottom='sm'
       borderColor='border-contrast-xs'
@@ -40,13 +44,20 @@ export default function NavBar() {
       color='text-contrast-lg'
       zIndex={99}
     >
-      <HStack width={['md', 'lg', 'xl']} px={1} align='center' justify='space-between'>
-        <Heading size='md'>
-          <Link as={RouterLink} to='/'>
-            CoverLetterGPT
-          </Link>
-        </Heading>
+      <HStack width='full' px={1} gap={3} align='center' justify='space-between'>
+        <Link as={RouterLink} to='/'>
+          <HStack gap={0}>
+            <Heading size='md' color={'text-contrast-md'}>
+              CoverLetter
+            </Heading>
+            <Heading size='md' color={gptTextColor}>
+              GPT
+            </Heading>
+          </HStack>
+        </Link>
         <Spacer />
+        <ThemeSwitch />
+
         {user ? (
           <>
             <NavButton icon={<MdWorkOutline />} to='/jobs'>

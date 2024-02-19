@@ -1,8 +1,8 @@
 export const semanticTokens = {
   colors: {
     'bg-body': {
-      default: 'gray.50',
-      _dark: 'rgba(0, 0, 0, 0.90)', //'#0d0f10',
+      default: 'whiteAlpha.900',
+      _dark: 'rgba(0, 0, 0, 0.50)', //'#0d0f10',
     },
     'bg-body-inverse': {
       default: 'rgba(0, 0, 0, 0.90)',

@@ -149,7 +149,7 @@ function JobsPage({ user }: { user: User }) {
                       </HStack>
                       <HStack py={1} justify='space-between'>
                         <Button onClick={() => coverLetterHandler(job)} size='sm'>
-                          Display Cover Letter(s)
+                          Display Cover Letters
                         </Button>
                         <Button colorScheme='purple' onClick={() => updateCoverLetterHandler(job.id)} size='sm'>
                           Create Additional Cover Letter
@@ -165,7 +165,7 @@ function JobsPage({ user }: { user: User }) {
           </Accordion>
         )}
       </BorderBox>
-      <Button size='sm' colorScheme='purple' alignSelf='flex-end' onClick={() => history.push('/')}>
+      <Button size='sm' mt={3} colorScheme='purple' alignSelf='flex-end' onClick={() => history.push('/')}>
         Create New Job
       </Button>
       {coverLetter && coverLetter.length > 0 && (

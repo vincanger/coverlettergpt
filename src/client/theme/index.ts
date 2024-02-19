@@ -107,7 +107,7 @@ export const Input = {
       field: {
         border: 'sm',
         borderColor: 'border-contrast-xs',
-        bg: 'bg-contrast-sm',
+        bg: 'bg-contrast-xs',
         color: 'text-contrast-lg',
         _hover: {
           bg: 'bg-contrast-md',
@@ -131,8 +131,25 @@ export const Input = {
 
 ChakraTextarea.defaultProps = {
   ...ChakraTextarea.defaultProps,
-  focusBorderColor: 'white',
+  focusBorderColor: 'purple.300',
   variant: 'outline',
+  sx: {
+    '&::-webkit-scrollbar': {
+      width: '12px',
+    },
+    '&::-webkit-scrollbar-track': {
+      backgroundColor: 'transparent',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: 'purple.100',
+      borderRadius: '20px',
+      border: '3px solid transparent',
+      backgroundClip: 'content-box',
+    },
+    '&::-webkit-scrollbar-thumb:hover': {
+      backgroundColor: 'purple.200',
+    },
+  },
 };
 
 export const Textarea = {
@@ -143,12 +160,11 @@ export const Textarea = {
       bg: 'bg-contrast-sm',
       color: 'text-contrast-lg',
       _hover: {
-        bg: 'bg-contrast-md',
         borderColor: 'border-contrast-md',
       },
       _focus: {
         boxShadow: 'none',
-        borderColor: 'active',
+        bgColor: 'bg-contrast-xs',
       },
       _disabled: {
         bg: 'bg-contrast-xs',

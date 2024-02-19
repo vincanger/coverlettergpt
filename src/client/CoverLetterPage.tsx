@@ -65,12 +65,10 @@ export default function CoverLetterPage({ match }: { match: match<{ id: string }
           }}
           value={textareaState}
           id='cover-letter-textarea'
-          height='md'
+          height={['sm', 'lg', 'xl']}
           top='50%'
           left='50%'
           transform={'translate(-50%, 0%)'}
-          resize='none'
-          variant='filled'
           dropShadow='lg'
           overflow='none'
           visibility={isLoading ? 'hidden' : 'visible'}
