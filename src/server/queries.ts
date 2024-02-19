@@ -1,6 +1,12 @@
-import { GetCoverLetter, GetJobs, GetJob, GetUserInfo, GetCoverLetterCount } from '@wasp/queries/types';
-import { CoverLetter, Job, User } from '@wasp/entities';
-import HttpError from '@wasp/core/HttpError.js';
+import { type CoverLetter, type Job, type User } from "wasp/entities";
+import { HttpError } from "wasp/server";
+import {
+  type GetCoverLetter,
+  type GetJobs,
+  type GetJob,
+  type GetUserInfo,
+  type GetCoverLetterCount,
+} from "wasp/server/operations";
 
 export const getCoverLetter: GetCoverLetter<Pick<CoverLetter, 'id'> , CoverLetter> = async ({ id }, context) => {
   if (!context.user) {

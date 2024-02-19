@@ -1,8 +1,7 @@
+import { type User } from "wasp/entities";
+import { useQuery, getUserInfo } from "wasp/client/operations";
 import BorderBox from './components/BorderBox';
 import { Heading, Text, Spinner } from '@chakra-ui/react';
-import { User } from '@wasp/entities';
-import { useQuery } from '@wasp/queries';
-import getUserInfo from '@wasp/queries/getUserInfo';
 import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 

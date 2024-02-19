@@ -1,6 +1,4 @@
-import { emailSender } from '@wasp/email/index.js';
-
-import type { Email } from '@wasp/email/core/types';
+import { emailSender, type Email } from "wasp/server/email";
 import type { Context } from '../types';
 
 const emailToSend: Email = {

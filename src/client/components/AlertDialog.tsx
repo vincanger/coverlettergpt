@@ -1,3 +1,4 @@
+import { deleteJob, milliSatsToCents } from "wasp/client/operations";
 import {
   AlertDialog,
   AlertDialogBody,
@@ -20,8 +21,6 @@ import { useHistory } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { AiOutlineLogin } from 'react-icons/ai';
 import { BiTrash } from 'react-icons/bi';
-import deleteJob from '@wasp/actions/deleteJob';
-import milliSatsToCents from '@wasp/actions/milliSatsToCents';
 
 export function LeaveATip({
   isOpen,

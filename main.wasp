@@ -1,11 +1,321 @@
-app coverlettergpt {
+app CoverLetterGPT {
   wasp: {
     version: "^0.12.0"
   },
-  title: "coverlettergpt"
+  title: "CoverLetterGPT",
+  head: [
+        "<meta property=\"og:type\" content=\"website\" />",
+        "<meta property=\"og:url\" content=\"https://CoverLetterGPT.xyz\" />",
+        "<meta property=\"og:title\" content=\"CoverLetterGPT\" />",
+        "<meta property=\"og:description\" content=\"Create Unique Cover Letters Based on Your Skills using GPT. Supercharge Your Job Search with Cover Letter GPT.\" />",
+        "<meta property=\"og:image\" content=\"https://CoverLetterGPT.xyz/homepage.png\" />",
+        "<meta name=\"twitter:image\" content=\"https://CoverLetterGPT.xyz/homepage.png\" />",
+        "<meta name=\"twitter:image:width\" content=\"800\" />",
+        "<meta name=\"twitter:image:height\" content=\"400\" />",
+        "<meta name=\"twitter:card\" content=\"summary_large_image\" />",
+        "<!-- Google tag (gtag.js) --><script async src=\"https://www.googletagmanager.com/gtag/js?id=G-SXYZR2FHVJ\"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-SXYZR2FHVJ');</script>"
+  ],
+  // 🔐 Auth out of the box! https://wasp-lang.dev/docs/language/features#authentication--authorization
+  auth: {
+    userEntity: User,
+    methods: {
+      google: {
+        userSignupFields: import { getGoogleUserFields } from "@src/server/auth.js",
+        configFn: import { getGoogleAuthConfig } from "@src/server/auth.js",
+      },
+    },
+    onAuthFailedRedirectTo: "/",
+  },
+  db: {
+    system: PostgreSQL,
+  },
+  client: {
+    rootComponent: import App from "@src/client/App",
+    setupFn: import clientSetup from "@src/client/clientSetup"
+  },
+  emailSender: {
+    provider: SendGrid,
+    defaultFrom: {
+      name: "CoverLetterGPT",
+      email: "vince@wasp-lang.dev",
+    },
+  },
 }
+
+/* 💽 Wasp defines DB entities via Prisma Database Models: 
+ * https://wasp-lang.dev/docs/language/features#entity
+ */
+
+entity User {=psl
+  id                        Int                  @id @default(autoincrement())
+  username                  String               @unique
+  email                     String?
+  hasPaid                   Boolean              @default(false)
+  isUsingLn                 Boolean              @default(false)
+  gptModel                  String               @default("gpt-3.5-turbo")
+  datePaid                  DateTime?
+  stripeId                  String? 
+  checkoutSessionId         String?
+  subscriptionStatus        String?              
+  notifyPaymentExpires      Boolean              @default(false)
+  credits                   Int                  @default(3)
+  letters                   CoverLetter[]
+  jobs                      Job[]
+  lnData                    LnData?
+  lnPayments                LnPayment[]
+psl=}
+
+entity LnData {=psl
+  id                        String                @id @default(uuid())
+  user                      User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                    Int?                  @unique
+  loginUrl                  String?               @unique
+  k1Hash                    String                @unique
+  token                     String?  
+  createdAt                 DateTime              @default(now())
+  updatedAt                 DateTime?             @updatedAt
+psl=}
+
+// type LightningInvoice = {
+//   status: string;
+//   successAction: {
+//     tag: string;
+//     message: string;
+//   };
+//   verify: string;
+//   routes: any[]; // You can replace this with a more specific type if needed
+//   pr: string;
+// };
+entity LnPayment {=psl
+  pr                        String                @id @unique
+  status                    String
+  settled                   Boolean               @default(false)
+  user                      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                    Int
+  amount                    Int?
+  createdAt                 DateTime              @default(now())
+  updatedAt                 DateTime?             @updatedAt
+psl=}
+
+entity CoverLetter {=psl
+  id                        String                @id @default(uuid())
+  title                     String
+  content                   String
+  tokenUsage                Int
+  job                       Job                   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId                     String
+  user                      User?                 @relation(fields: [userId], references: [id])
+  userId                    Int?
+  createdAt                 DateTime              @default(now())
+  updatedAt                 DateTime?             @updatedAt
+psl=}
+
+entity Job {=psl
+  id                        String                @id @default(uuid())
+  title                     String
+  company                   String
+  location                  String
+  description               String
+  coverLetter               CoverLetter[] 
+  user                      User?                 @relation(fields: [userId], references: [id])
+  userId                    Int?
+  createdAt                 DateTime              @default(now())
+  updatedAt                 DateTime              @updatedAt
+  isCompleted               Boolean               @default(false)
+psl=}
+
+/* 📡 These are the Wasp Routes (You can protect them easily w/ 'authRequired: true');
+ * https://wasp-lang.dev/docs/language/features#route
+ */
 
 route RootRoute { path: "/", to: MainPage }
 page MainPage {
-  component: import { MainPage } from "@src/MainPage.jsx"
+  component: import Main from "@src/client/MainPage"
+}
+
+route CoverLetterPage { path: "/cover-letter/:id", to: CoverLetterPage }
+page CoverLetterPage {
+  authRequired: true,
+  component: import CoverLetter from "@src/client/CoverLetterPage"
+}
+
+route LoginRoute { path: "/login", to: LoginPage }
+page LoginPage {
+  component: import Login from "@src/client/LoginPage"
+}
+
+route JobsRoute { path: "/jobs", to: JobsPage }
+page JobsPage {
+  authRequired: true,
+  component: import Jobs from "@src/client/JobsPage"
+}
+
+route ProfileRoute { path: "/profile", to: ProfilePage }
+page ProfilePage {
+  authRequired: true,
+  component: import Profile from "@src/client/ProfilePage"
+}
+
+route CheckoutRoute { path: "/checkout", to: CheckoutPage }
+page CheckoutPage {
+  authRequired: true,
+  component: import Checkout from "@src/client/CheckoutPage"
+}
+
+/* ⛑ These are the Wasp Operations, which allow the client and server to interact:
+ * https://wasp-lang.dev/docs/language/features#queries-and-actions-aka-operations
+ */
+
+// 📝 Actions aka Mutations
+
+action generateCoverLetter {
+  fn: import { generateCoverLetter } from "@src/server/actions.js",
+  entities: [CoverLetter, User, LnPayment]
+}
+
+action createJob {
+  fn: import { createJob } from "@src/server/actions.js",
+  entities: [Job]
+}
+
+action updateJob {
+  fn: import { updateJob } from "@src/server/actions.js",
+  entities: [Job]
+}
+
+action updateCoverLetter {
+  fn: import { updateCoverLetter } from "@src/server/actions.js",
+  entities: [Job, CoverLetter, User, LnPayment]
+}
+
+action generateEdit {
+  fn: import { generateEdit } from "@src/server/actions.js",
+  entities: [CoverLetter, User, LnPayment]
+}
+
+action editCoverLetter {
+  fn: import { editCoverLetter } from "@src/server/actions.js",
+  entities: [CoverLetter]
+}
+
+action updateUser {
+  fn: import { updateUser } from "@src/server/actions.js",
+  entities: [User]
+}
+
+action deleteJob {
+  fn: import { deleteJob } from "@src/server/actions.js",
+  entities: [Job]
+}
+
+action stripePayment {
+  fn: import { stripePayment } from "@src/server/actions.js",
+  entities: [User]
+}
+
+action stripeGpt4Payment {
+  fn: import { stripeGpt4Payment } from "@src/server/actions.js",
+  entities: [User]
+}
+
+action stripeCreditsPayment {
+  fn: import { stripeCreditsPayment } from "@src/server/actions.js",
+  entities: [User]
+}
+
+action getLnLoginUrl {
+  fn: import { getLnLoginUrl } from "@src/server/ln.js",
+  entities: [User, LnData]
+}
+
+action decodeInvoice {
+  fn: import { decodeInvoice } from "@src/server/ln.js",
+}
+
+action updateLnPayment {
+  fn: import { updateLnPayment } from "@src/server/ln.js",
+  entities: [LnPayment]
+}
+
+action milliSatsToCents {
+  fn: import { milliSatsToCents } from "@src/server/ln.js",
+}
+
+// 📚 Queries
+
+query getJobs {
+  fn: import { getJobs } from "@src/server/queries.js",
+  entities: [Job]
+}
+
+query getJob {
+  fn: import { getJob } from "@src/server/queries.js",
+  entities: [Job]
+}
+
+query getCoverLetter {
+  fn: import { getCoverLetter } from "@src/server/queries.js",
+  entities: [CoverLetter]
+}
+
+query getCoverLetters {
+  fn: import { getCoverLetters } from "@src/server/queries.js",
+  entities: [CoverLetter]
+}
+
+query getUserInfo {
+  fn: import { getUserInfo } from "@src/server/queries.js",
+  entities: [User]
+}
+
+query getLnUserInfo {
+  fn: import { getLnUserInfo } from "@src/server/ln.js",
+  entities: [User, LnData]
+}
+
+query getCoverLetterCount {
+  fn: import { getCoverLetterCount } from "@src/server/queries.js",
+  entities: [CoverLetter]
+}
+
+/* 📡 These are custom Wasp API Endpoints. Use them for callbacks, webhooks, etc.
+ * https://wasp-lang.dev/docs/language/features#apis
+ */ 
+
+api stripeWebhook {
+  fn: import { stripeWebhook } from "@src/server/webhooks.js",
+  entities: [User],
+  httpRoute: (POST, "/stripe-webhook")
+}
+
+api lnLogin {
+  fn: import { lnLogin } from "@src/server/ln.js",
+  entities: [User, LnData],
+  httpRoute: (GET, "/ln-login")
+}
+
+/* 🕵️‍♂️ These are the Wasp Cron Jobs. Use them to set up recurring tasks or queues:
+ * https://wasp-lang.dev/docs/language/features#jobs
+ */
+
+job checkUserSubscription {
+  executor: PgBoss,
+  perform: {
+    fn: import { updateUserSubscription } from "@src/server/workers/updateUserSubscription.js"
+  },
+  schedule: {
+    cron: "0 23 * * *" 
+  },
+  entities: [User]
+}
+
+job checkExpirationDate {
+  executor: PgBoss,
+  perform: {
+    fn: import { sendExpirationNotice } from "@src/server/workers/sendExpirationNotice.js"
+  },
+  schedule: {
+    cron: "0 17 * * *" 
+  },
+  entities: [User]
 }

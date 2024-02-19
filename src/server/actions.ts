@@ -1,19 +1,19 @@
-import HttpError from '@wasp/core/HttpError.js';
+import { type Job, type CoverLetter, type User, type LnPayment } from "wasp/entities";
+import { HttpError } from "wasp/server";
+import {
+  type GenerateCoverLetter,
+  type CreateJob,
+  type UpdateCoverLetter,
+  type EditCoverLetter,
+  type GenerateEdit,
+  type UpdateJob,
+  type UpdateUser,
+  type DeleteJob,
+  type StripePayment,
+  type StripeGpt4Payment,
+  type StripeCreditsPayment,
+} from "wasp/server/operations";
 import fetch from 'node-fetch';
-import type { Job, CoverLetter, User, LnPayment } from '@wasp/entities';
-import type {
-  GenerateCoverLetter,
-  CreateJob,
-  UpdateCoverLetter,
-  EditCoverLetter,
-  GenerateEdit,
-  UpdateJob,
-  UpdateUser,
-  DeleteJob,
-  StripePayment,
-  StripeGpt4Payment,
-  StripeCreditsPayment,
-} from '@wasp/actions/types';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_KEY!, {

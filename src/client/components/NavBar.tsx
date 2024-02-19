@@ -1,3 +1,4 @@
+import { useAuth } from "wasp/client/auth";
 import {
   HStack,
   Heading,
@@ -16,7 +17,6 @@ import { Link as RouterLink } from 'react-router-dom';
 import { CgProfile } from 'react-icons/cg';
 import { MdWorkOutline } from 'react-icons/md';
 import { AiOutlineMenu } from 'react-icons/ai';
-import useAuth from '@wasp/auth/useAuth';
 import { useRef } from 'react';
 import ThemeSwitch from './ThemeSwitch';
 

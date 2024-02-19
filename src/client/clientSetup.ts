@@ -1,4 +1,4 @@
-import { configureQueryClient } from '@wasp/queryClient';
+import { configureQueryClient } from "wasp/client/operations";
 
 export default async function mySetupFunction() {
   configureQueryClient({

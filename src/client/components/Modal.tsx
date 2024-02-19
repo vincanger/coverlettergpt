@@ -1,3 +1,4 @@
+import { type CoverLetter } from "wasp/entities";
 import {
   Select,
   Modal,
@@ -13,7 +14,6 @@ import {
   useClipboard,
 } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
-import { CoverLetter } from '@wasp/entities';
 import { useHistory } from 'react-router-dom';
 import { AiOutlineEdit } from 'react-icons/ai';
 

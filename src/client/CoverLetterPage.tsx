@@ -1,14 +1,12 @@
+import { type CoverLetter } from "wasp/entities";
+import { editCoverLetter, useQuery, getCoverLetter } from "wasp/client/operations";
 import { Tooltip, Button, Textarea, useClipboard, Spinner, HStack } from '@chakra-ui/react';
 import { match } from 'react-router-dom';
-import { useQuery } from '@wasp/queries';
-import getCoverLetter from '@wasp/queries/getCoverLetter';
 import BorderBox from './components/BorderBox';
 import { useContext } from 'react';
 import { TextareaContext } from './App';
 import { EditAlert } from './components/AlertDialog';
-import editCoverLetter from '@wasp/actions/editCoverLetter';
 import { useEffect, useState } from 'react';
-import { CoverLetter } from '@wasp/entities';
 
 export default function CoverLetterPage({ match }: { match: match<{ id: string }> }) {
   const { textareaState, setTextareaState } = useContext(TextareaContext);

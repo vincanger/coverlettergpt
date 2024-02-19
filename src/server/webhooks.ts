@@ -1,6 +1,6 @@
-import { StripeWebhook } from '@wasp/apis/types';
+import { emailSender } from "wasp/server/email";
+import { type StripeWebhook } from "wasp/server/api";
 import Stripe from 'stripe';
-import { emailSender } from '@wasp/email/index.js';
 
 const stripe = new Stripe(process.env.STRIPE_KEY!, {
   apiVersion: '2023-08-16',
