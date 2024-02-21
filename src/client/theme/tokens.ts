@@ -1,7 +1,7 @@
 export const semanticTokens = {
   colors: {
     'bg-body': {
-      default: 'whiteAlpha.900',
+      default: 'gray.100',
       _dark: 'rgba(0, 0, 0, 0.50)', //'#0d0f10',
     },
     'bg-body-inverse': {
@@ -30,6 +30,10 @@ export const semanticTokens = {
     },
     'bg-contrast-overlay': {
       default: 'rgba(255, 255, 255, 0.82)',
+      _dark: 'rgba(0, 0, 0, 0.87)',
+    },
+    'bg-overlay': {
+      default: 'rgba(237, 242, 247, .98)',
       _dark: 'rgba(0, 0, 0, 0.87)',
     },
     'bg-modal': {

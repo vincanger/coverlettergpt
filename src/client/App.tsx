@@ -81,7 +81,7 @@ export default function App({ children }: { children: ReactNode }) {
         >
           {!!user && <EditPopover setTooltip={setTooltip} user={user} />}
         </Box>
-        <VStack gap={5} minHeight='100vh' bg='bg-contrast-sm'>
+        <VStack gap={5} minHeight='100vh'>
           <NavBar />
           {children}
           <Spacer />

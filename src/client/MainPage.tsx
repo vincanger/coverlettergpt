@@ -356,7 +356,7 @@ function MainPage() {
         py={2}
         mt={3}
         mb={-3}
-        bgColor='bg-contrast-overlay'
+        bgColor='bg-overlay'
         visibility={!coverLetterCount ? 'hidden' : 'visible'}
         _hover={{ bgColor: 'bg-contrast-xs' }}
         transition='0.1s ease-in-out'
