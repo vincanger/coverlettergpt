@@ -24,6 +24,7 @@ export default function NavBar() {
   const { data: user } = useAuth();
 
   const gptTextColor = useColorModeValue('purple.500', 'white');
+  const borderColor = useColorModeValue('purple.300', 'purple.100');
 
   return (
     <HStack
@@ -36,8 +37,8 @@ export default function NavBar() {
       width='full'
       position='sticky'
       backdropFilter='blur(5px)'
-      borderBottom='sm'
-      borderColor='border-contrast-xs'
+      borderBottom='md'
+      borderColor={borderColor}
       filter='drop-shadow(0px 0px 2px rgba(255, 255, 255, 0.25))'
       color='text-contrast-lg'
       zIndex={99}
