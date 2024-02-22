@@ -1,15 +1,12 @@
+import { type User, type LnPayment } from "wasp/entities";
+import { generateEdit, updateLnPayment, useQuery, getUserInfo } from "wasp/client/operations";
 import { VStack, ButtonGroup, Button, ButtonGroupProps, Text, Box, useDisclosure } from '@chakra-ui/react';
-import generateEdit from '@wasp/actions/generateEdit';
 import { useContext, useState } from 'react';
 import { TextareaContext } from '../App';
 import { LeaveATip } from './AlertDialog';
-import getUserInfo from '@wasp/queries/getUserInfo';
-import { useQuery } from '@wasp/queries';
-import type { User, LnPayment } from '@wasp/entities';
 import LnPaymentModal from './LnPaymentModal';
 import { fetchLightningInvoice } from '../lightningUtils';
 import type { LightningInvoice } from '../lightningUtils';
-import updateLnPayment from '@wasp/actions/updateLnPayment';
 
 interface EditPopoverProps extends ButtonGroupProps {
   selectedText?: string;

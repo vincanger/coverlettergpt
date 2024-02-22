@@ -1,14 +1,21 @@
+import { type LnData, type LnPayment } from "wasp/entities";
+import { HttpError } from "wasp/server";
+import { type LnLogin } from "wasp/server/api";
+
+import {
+  type GetLnLoginUrl,
+  type DecodeInvoice,
+  type UpdateLnPayment,
+  type MilliSatsToCents,
+  type GetLnUserInfo,
+} from "wasp/server/operations";
+
 import { randomBytes, createHash as cryptoCreateHash } from 'crypto';
-import type { GetLnLoginUrl, DecodeInvoice, UpdateLnPayment, MilliSatsToCents } from '@wasp/actions/types';
-import type { GetLnUserInfo } from '@wasp/queries/types';
 //@ts-ignore
 import lnurl from 'lnurl';
 //@ts-ignore
 import jwt from 'jsonwebtoken';
-import type { LnLogin } from '@wasp/apis/types';
-import { LnData, LnPayment } from '@wasp/entities';
 import bolt11 from 'bolt11';
-import HttpError from '@wasp/core/HttpError.js';
 import axios from 'axios';
 
 const DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:3001';

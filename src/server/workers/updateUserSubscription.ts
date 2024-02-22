@@ -1,4 +1,4 @@
-import type { User } from '@wasp/entities';
+import { type User } from "wasp/entities";
 
 export async function updateUserSubscription(_args: unknown, context: any) {
   console.log('Starting CRON JOB: \n\nUpdating user subscriptions...')

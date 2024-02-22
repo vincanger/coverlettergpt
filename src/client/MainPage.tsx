@@ -1,3 +1,16 @@
+import { type User, type LnPayment } from "wasp/entities";
+import { useAuth } from "wasp/client/auth";
+
+import {
+  generateCoverLetter,
+  createJob,
+  updateCoverLetter,
+  updateLnPayment,
+  useQuery,
+  getJob,
+  getCoverLetterCount,
+} from "wasp/client/operations";
+
 import {
   Box,
   HStack,
@@ -30,19 +43,10 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { useState, useEffect, useRef } from 'react';
 import { ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
-import { useQuery } from '@wasp/queries';
 import { useHistory } from 'react-router-dom';
-import getJob from '@wasp/queries/getJob';
-import getCoverLetterCount from '@wasp/queries/getCoverLetterCount';
-import generateCoverLetter from '@wasp/actions/generateCoverLetter';
-import createJob from '@wasp/actions/createJob';
-import updateCoverLetter from '@wasp/actions/updateCoverLetter';
-import useAuth from '@wasp/auth/useAuth';
 import LnPaymentModal from './components/LnPaymentModal';
 import { fetchLightningInvoice } from './lightningUtils';
 import type { LightningInvoice } from './lightningUtils';
-import updateLnPayment from '@wasp/actions/updateLnPayment';
-import { User, LnPayment } from '@wasp/entities';
 
 function MainPage() {
   const [isPdfReady, setIsPdfReady] = useState<boolean>(false);

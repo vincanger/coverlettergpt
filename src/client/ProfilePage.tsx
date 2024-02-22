@@ -1,14 +1,19 @@
+import { type CoverLetter, type User } from "wasp/entities";
+import { logout } from "wasp/client/auth";
+
+import {
+  useAction,
+  type OptimisticUpdateDefinition,
+  updateUser,
+  stripePayment,
+  stripeGpt4Payment,
+  useQuery,
+  getUserInfo,
+} from "wasp/client/operations";
+
 import BorderBox from './components/BorderBox';
 import { Box, Heading, Text, Button, Code, Spinner, Checkbox, VStack, HStack, Link } from '@chakra-ui/react';
-import { CoverLetter, User } from '@wasp/entities';
-import { useQuery } from '@wasp/queries';
-import getUserInfo from '@wasp/queries/getUserInfo';
-import updateUser from '@wasp/actions/updateUser';
 import { useState } from 'react';
-import stripePayment from '@wasp/actions/stripePayment';
-import stripeGpt4Payment from '@wasp/actions/stripeGpt4Payment';
-import logout from '@wasp/auth/logout';
-import { useAction, OptimisticUpdateDefinition } from '@wasp/actions';
 import { IoWarningOutline } from 'react-icons/io5';
 
 export default function ProfilePage({ user }: { user: User }) {

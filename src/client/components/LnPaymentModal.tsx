@@ -1,3 +1,4 @@
+import { milliSatsToCents, decodeInvoice, updateLnPayment } from "wasp/client/operations";
 import {
   Modal,
   ModalOverlay,
@@ -15,9 +16,6 @@ import {
 import { AiFillCheckCircle } from 'react-icons/ai';
 import QRCode from 'qrcode.react';
 import { useEffect, useRef, useState } from 'react';
-import milliSatsToCents from '@wasp/actions/milliSatsToCents';
-import decodeInvoice from '@wasp/actions/decodeInvoice';
-import updateLnPayment from '@wasp/actions/updateLnPayment';
 
 type LightningInvoice = {
   status: string;

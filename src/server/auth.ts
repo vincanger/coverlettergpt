@@ -1,7 +1,5 @@
-import { generateAvailableUsername } from '@wasp/core/auth.js'
-
 export async function getUserFields(_context: unknown, args: any) {
-  const username = await generateAvailableUsername(args.profile.displayName.split(' '), { separator: '.' })
+  const username = args.profile.displayName;
   const email = args.profile.emails[0].value;
   return { username, email };
 }

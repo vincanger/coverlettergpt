@@ -1,6 +1,6 @@
-app applyai {
+app CoverLetterGPT {
   wasp: {
-    version: "^0.11.8"
+    version: "^0.12.0"
   },
   title: "CoverLetterGPT",
   head: [
@@ -21,18 +21,21 @@ app applyai {
     externalAuthEntity: SocialLogin,
     methods: {
       google: {
-        getUserFieldsFn: import { getUserFields } from "@server/auth.js",
-        configFn: import { config } from "@server/auth.js",
+        userSignupFields: import { getUserFields } from "@src/server/auth.js",
+        configFn: import { config } from "@src/server/auth.js",
       },
     },
     onAuthFailedRedirectTo: "/",
   },
   db: {
-    system: PostgreSQL
+    system: PostgreSQL,
+    seeds: [
+      import { migrateGoogleAuth } from "@src/migrateToNewAuth.ts",
+    ]
   },
   client: {
-    rootComponent: import App from "@client/App",
-    setupFn: import clientSetup from "@client/clientSetup"
+    rootComponent: import App from "@src/client/App",
+    setupFn: import clientSetup from "@src/client/clientSetup"
   },
   emailSender: {
     provider: SendGrid,
@@ -41,23 +44,6 @@ app applyai {
       email: "vince@wasp-lang.dev",
     },
   },
-  dependencies: [
-    ("node-fetch", "3.3.0"),
-    ("@chakra-ui/react", "2.8.0"),
-    ("react-icons", "4.8.0"),
-    ("@emotion/react", "11.10.6"),
-    ("@emotion/styled", "11.10.6"),
-    ("framer-motion", "6.5.1"),
-    ("react-hook-form", "^7.45.4"),
-    ("pdfjs-dist", "3.3.122"),
-    ("@types/pdfjs-dist", "2.10.378"),
-    ("stripe", "13.3.0"),
-    ("lnurl", "0.24.2"),
-    ("jsonwebtoken", "^8.5.1"),
-    ("qrcode.react", "3.1.0"),
-    ("bolt11", "1.4.1")
-  ],
-
 }
 
 /* 💽 Wasp defines DB entities via Prisma Database Models: 
@@ -159,36 +145,36 @@ psl=}
 
 route RootRoute { path: "/", to: MainPage }
 page MainPage {
-  component: import Main from "@client/MainPage"
+  component: import Main from "@src/client/MainPage"
 }
 
 route CoverLetterPage { path: "/cover-letter/:id", to: CoverLetterPage }
 page CoverLetterPage {
   authRequired: true,
-  component: import CoverLetter from "@client/CoverLetterPage"
+  component: import CoverLetter from "@src/client/CoverLetterPage"
 }
 
 route LoginRoute { path: "/login", to: LoginPage }
 page LoginPage {
-  component: import Login from "@client/LoginPage"
+  component: import Login from "@src/client/LoginPage"
 }
 
 route JobsRoute { path: "/jobs", to: JobsPage }
 page JobsPage {
   authRequired: true,
-  component: import Jobs from "@client/JobsPage"
+  component: import Jobs from "@src/client/JobsPage"
 }
 
 route ProfileRoute { path: "/profile", to: ProfilePage }
 page ProfilePage {
   authRequired: true,
-  component: import Profile from "@client/ProfilePage"
+  component: import Profile from "@src/client/ProfilePage"
 }
 
 route CheckoutRoute { path: "/checkout", to: CheckoutPage }
 page CheckoutPage {
   authRequired: true,
-  component: import Checkout from "@client/CheckoutPage"
+  component: import Checkout from "@src/client/CheckoutPage"
 }
 
 /* ⛑ These are the Wasp Operations, which allow the client and server to interact:
@@ -198,112 +184,112 @@ page CheckoutPage {
 // 📝 Actions aka Mutations
 
 action generateCoverLetter {
-  fn: import { generateCoverLetter } from "@server/actions.js",
+  fn: import { generateCoverLetter } from "@src/server/actions.js",
   entities: [CoverLetter, User, LnPayment]
 }
 
 action createJob {
-  fn: import { createJob } from "@server/actions.js",
+  fn: import { createJob } from "@src/server/actions.js",
   entities: [Job]
 }
 
 action updateJob {
-  fn: import { updateJob } from "@server/actions.js",
+  fn: import { updateJob } from "@src/server/actions.js",
   entities: [Job]
 }
 
 action updateCoverLetter {
-  fn: import { updateCoverLetter } from "@server/actions.js",
+  fn: import { updateCoverLetter } from "@src/server/actions.js",
   entities: [Job, CoverLetter, User, LnPayment]
 }
 
 action generateEdit {
-  fn: import { generateEdit } from "@server/actions.js",
+  fn: import { generateEdit } from "@src/server/actions.js",
   entities: [CoverLetter, User, LnPayment]
 }
 
 action editCoverLetter {
-  fn: import { editCoverLetter } from "@server/actions.js",
+  fn: import { editCoverLetter } from "@src/server/actions.js",
   entities: [CoverLetter]
 }
 
 action updateUser {
-  fn: import { updateUser } from "@server/actions.js",
+  fn: import { updateUser } from "@src/server/actions.js",
   entities: [User]
 }
 
 action deleteJob {
-  fn: import { deleteJob } from "@server/actions.js",
+  fn: import { deleteJob } from "@src/server/actions.js",
   entities: [Job]
 }
 
 action stripePayment {
-  fn: import { stripePayment } from "@server/actions.js",
+  fn: import { stripePayment } from "@src/server/actions.js",
   entities: [User]
 }
 
 action stripeGpt4Payment {
-  fn: import { stripeGpt4Payment } from "@server/actions.js",
+  fn: import { stripeGpt4Payment } from "@src/server/actions.js",
   entities: [User]
 }
 
 action stripeCreditsPayment {
-  fn: import { stripeCreditsPayment } from "@server/actions.js",
+  fn: import { stripeCreditsPayment } from "@src/server/actions.js",
   entities: [User]
 }
 
 action getLnLoginUrl {
-  fn: import { getLnLoginUrl } from "@server/ln.js",
+  fn: import { getLnLoginUrl } from "@src/server/ln.js",
   entities: [User, LnData]
 }
 
 action decodeInvoice {
-  fn: import { decodeInvoice } from "@server/ln.js",
+  fn: import { decodeInvoice } from "@src/server/ln.js",
 }
 
 action updateLnPayment {
-  fn: import { updateLnPayment } from "@server/ln.js",
+  fn: import { updateLnPayment } from "@src/server/ln.js",
   entities: [LnPayment]
 }
 
 action milliSatsToCents {
-  fn: import { milliSatsToCents } from "@server/ln.js",
+  fn: import { milliSatsToCents } from "@src/server/ln.js",
 }
 
 // 📚 Queries
 
 query getJobs {
-  fn: import { getJobs } from "@server/queries.js",
+  fn: import { getJobs } from "@src/server/queries.js",
   entities: [Job]
 }
 
 query getJob {
-  fn: import { getJob } from "@server/queries.js",
+  fn: import { getJob } from "@src/server/queries.js",
   entities: [Job]
 }
 
 query getCoverLetter {
-  fn: import { getCoverLetter } from "@server/queries.js",
+  fn: import { getCoverLetter } from "@src/server/queries.js",
   entities: [CoverLetter]
 }
 
 query getCoverLetters {
-  fn: import { getCoverLetters } from "@server/queries.js",
+  fn: import { getCoverLetters } from "@src/server/queries.js",
   entities: [CoverLetter]
 }
 
 query getUserInfo {
-  fn: import { getUserInfo } from "@server/queries.js",
+  fn: import { getUserInfo } from "@src/server/queries.js",
   entities: [User]
 }
 
 query getLnUserInfo {
-  fn: import { getLnUserInfo } from "@server/ln.js",
+  fn: import { getLnUserInfo } from "@src/server/ln.js",
   entities: [User, LnData]
 }
 
 query getCoverLetterCount {
-  fn: import { getCoverLetterCount } from "@server/queries.js",
+  fn: import { getCoverLetterCount } from "@src/server/queries.js",
   entities: [CoverLetter]
 }
 
@@ -312,13 +298,13 @@ query getCoverLetterCount {
  */ 
 
 api stripeWebhook {
-  fn: import { stripeWebhook } from "@server/webhooks.js",
+  fn: import { stripeWebhook } from "@src/server/webhooks.js",
   entities: [User],
   httpRoute: (POST, "/stripe-webhook")
 }
 
 api lnLogin {
-  fn: import { lnLogin } from "@server/ln.js",
+  fn: import { lnLogin } from "@src/server/ln.js",
   entities: [User, LnData],
   httpRoute: (GET, "/ln-login")
 }
@@ -330,7 +316,7 @@ api lnLogin {
 job checkUserSubscription {
   executor: PgBoss,
   perform: {
-    fn: import { updateUserSubscription } from "@server/workers/updateUserSubscription.js"
+    fn: import { updateUserSubscription } from "@src/server/workers/updateUserSubscription.js"
   },
   schedule: {
     cron: "0 23 * * *" 
@@ -341,7 +327,7 @@ job checkUserSubscription {
 job checkExpirationDate {
   executor: PgBoss,
   perform: {
-    fn: import { sendExpirationNotice } from "@server/workers/sendExpirationNotice.js"
+    fn: import { sendExpirationNotice } from "@src/server/workers/sendExpirationNotice.js"
   },
   schedule: {
     cron: "0 17 * * *" 

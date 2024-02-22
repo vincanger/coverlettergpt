@@ -1,3 +1,14 @@
+import { type Job, type User } from "wasp/entities";
+
+import {
+  useAction,
+  type OptimisticUpdateDefinition,
+  updateJob,
+  useQuery,
+  getJobs,
+  getCoverLetters,
+} from "wasp/client/operations";
+
 import { useState, useEffect } from 'react';
 import {
   Heading,
@@ -16,19 +27,12 @@ import {
   Checkbox,
   Spinner,
 } from '@chakra-ui/react';
-import { useQuery } from '@wasp/queries';
-import { OptimisticUpdateDefinition, useAction } from '@wasp/actions';
-import getJobs from '@wasp/queries/getJobs';
-import getCoverLetters from '@wasp/queries/getCoverLetters';
-import updateJob from '@wasp/actions/updateJob';
-import { Job } from '@wasp/entities';
 import ModalElement from './components/Modal';
 import DescriptionModal from './components/DescriptionModal';
 import BorderBox from './components/BorderBox';
 import { useHistory } from 'react-router-dom';
 import { DeleteJob } from './components/AlertDialog';
 import { FiDelete } from 'react-icons/fi';
-import type { User } from '@wasp/entities';
 
 function JobsPage({ user }: { user: User }) {
   const [jobId, setJobId] = useState<string>('');

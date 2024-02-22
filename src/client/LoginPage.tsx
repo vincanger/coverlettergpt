@@ -1,14 +1,11 @@
-import useAuth from '@wasp/auth/useAuth';
-import { signInUrl } from '@wasp/auth/helpers/Google';
-import getLnLoginUrl from '@wasp/actions/getLnLoginUrl';
+import { useAuth, googleSignInUrl as signInUrl } from "wasp/client/auth";
+import { getLnLoginUrl, useQuery, getLnUserInfo } from "wasp/client/operations";
 import { AiOutlineGoogle } from 'react-icons/ai';
 import { BsCurrencyBitcoin } from 'react-icons/bs';
 import { VStack, Button, Spinner, Text, useDisclosure } from '@chakra-ui/react';
 import BorderBox from './components/BorderBox';
 import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import getLnUserInfo from '@wasp/queries/getLnUserInfo';
-import { useQuery } from '@wasp/queries';
 import LnLoginModal from './components/LnLoginModal';
 
 export default function Login() {
