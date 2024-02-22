@@ -1,6 +1,10 @@
-import { type LnData, type LnPayment } from "wasp/entities";
-import { HttpError } from "wasp/server";
-import { type LnLogin } from "wasp/server/api";
+import { type LnData, type LnPayment } from 'wasp/entities';
+import { HttpError } from 'wasp/server';
+import { type LnLogin } from 'wasp/server/api';
+import { Lucia } from 'lucia';
+import { PrismaAdapter } from '@lucia-auth/adapter-prisma';
+import { prisma } from 'wasp/server';
+import { type User } from 'wasp/entities';
 
 import {
   type GetLnLoginUrl,
@@ -8,17 +12,41 @@ import {
   type UpdateLnPayment,
   type MilliSatsToCents,
   type GetLnUserInfo,
-} from "wasp/server/operations";
+} from 'wasp/server/operations';
 
 import { randomBytes, createHash as cryptoCreateHash } from 'crypto';
 //@ts-ignore
 import lnurl from 'lnurl';
-//@ts-ignore
-import jwt from 'jsonwebtoken';
 import bolt11 from 'bolt11';
 import axios from 'axios';
 
 const DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+
+// the lucia auth stuff is a dumb workaround until we integrate Bitcoin Lightning in Wasp Auth
+const prismaAdapter = new PrismaAdapter(prisma.session as any, prisma.auth as any);
+
+export const auth = new Lucia<
+  {},
+  {
+    userId: User['id'];
+  }
+>(prismaAdapter, {
+  getUserAttributes({ userId }) {
+    return {
+      userId,
+    };
+  },
+});
+
+declare module 'lucia' {
+  interface Register {
+    Lucia: typeof auth;
+    DatabaseSessionAttributes: {};
+    DatabaseUserAttributes: {
+      userId: User['id'];
+    };
+  }
+}
 
 export function generateK1() {
   return randomBytes(32).toString('hex');
@@ -92,9 +120,10 @@ export const lnLogin: LnLogin = async (request, response, context) => {
     },
     create: {
       username: key,
-      password: createHash(key + sig),
+      email: 'Bitcoin Lightning User',
       isUsingLn: true,
       gptModel: 'gpt-4',
+      credits: 0,
       lnData: {
         connect: {
           k1Hash: storedK1.k1Hash,
@@ -110,21 +139,34 @@ export const lnLogin: LnLogin = async (request, response, context) => {
     },
     include: {
       lnData: true,
+      auth: true,
     },
   });
 
-  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!);
+  let AuthUser;
 
-  const lnData = await context.entities.LnData.update({
+  if (!user.auth) {
+    AuthUser = await prisma.auth.create({
+      data: {
+        userId: user.id,
+      },
+    });
+  } else {
+    AuthUser = user.auth;
+  }
+
+  const session = await auth.createSession(AuthUser.id, {});
+
+  const sessionId = session.id;
+
+  await context.entities.LnData.update({
     where: {
-      userId: user.id,
+      k1Hash: storedK1.k1Hash,
     },
     data: {
-      token,
+      token: sessionId,
     },
   });
-
-  console.log('lnData: ', lnData);
 
   response.status(200).json({ status: 'OK' });
 };
@@ -175,11 +217,10 @@ export const updateLnPayment: UpdateLnPayment<LightningInvoice, LnPayment> = asy
     },
   });
 
-  return updatedInvoice
+  return updatedInvoice;
 };
 
 const getBitcoinPrice = async () => {
-
   let response = null;
 
   try {
@@ -207,11 +248,11 @@ const getBitcoinPrice = async () => {
 //   return cents * milliSatsPerDollar;
 // };
 
-export const milliSatsToCents: MilliSatsToCents<{milliSats: number}, number> = async ({milliSats}, _context) => {
+export const milliSatsToCents: MilliSatsToCents<{ milliSats: number }, number> = async ({ milliSats }, _context) => {
   const bitcoinPrice = await getBitcoinPrice();
   if (bitcoinPrice === null) return 0;
 
-  const dollarsPerSat = bitcoinPrice / 100_000_000; // 
+  const dollarsPerSat = bitcoinPrice / 100_000_000; //
   const centsPerDollar = (milliSats / 1000) * dollarsPerSat;
   return centsPerDollar;
 };

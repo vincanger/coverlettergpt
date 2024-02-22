@@ -160,7 +160,7 @@ export default function ProfilePage({ user }: { user: User }) {
                         <br />
                         monthly subscription
                       </Text>
-                      <Heading size='md'>Using GPT-3 🦾</Heading>
+                      <Heading size='md'>Using GPT-3.5 🦾</Heading>
                     </VStack>
                     <Button mr={3} isLoading={isLoading} onClick={handleGpt3Click}>
                       Buy Now!

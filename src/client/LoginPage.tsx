@@ -1,5 +1,5 @@
-import { useAuth, googleSignInUrl as signInUrl } from "wasp/client/auth";
-import { getLnLoginUrl, useQuery, getLnUserInfo } from "wasp/client/operations";
+import { useAuth, googleSignInUrl as signInUrl } from 'wasp/client/auth';
+import { getLnLoginUrl, useQuery, getLnUserInfo } from 'wasp/client/operations';
 import { AiOutlineGoogle } from 'react-icons/ai';
 import { BsCurrencyBitcoin } from 'react-icons/bs';
 import { VStack, Button, Spinner, Text, useDisclosure } from '@chakra-ui/react';
@@ -45,7 +45,7 @@ export default function Login() {
     if (lnUserInfo?.token) {
       setLnLoginStatus('success');
       // this is how wasp stores the token for use with their auth api
-      localStorage.setItem('wasp:authToken', JSON.stringify(lnUserInfo.token));
+      localStorage.setItem('wasp:sessionId', JSON.stringify(lnUserInfo.token));
       window.location.reload();
     }
   }, [lnUserInfo]);
