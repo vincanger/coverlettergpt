@@ -28,9 +28,6 @@ app CoverLetterGPT {
   },
   db: {
     system: PostgreSQL,
-    // seeds: [
-    //   import { migrateGoogleAuth } from "@src/migrateToNewAuth.ts",
-    // ]
   },
   client: {
     rootComponent: import App from "@src/client/App",
