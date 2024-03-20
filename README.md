@@ -1,6 +1,6 @@
 # CoverLetterGPT.xyz
 
-<img src='src/client/public/homepage.png' width='600px'/>
+<img src='public/homepage.png' width='600px'/>
 
 ## Running it locally
 After cloning this repo, you can run it locally by following these steps:
