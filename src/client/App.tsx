@@ -1,5 +1,5 @@
-import { useAuth } from "wasp/client/auth";
-import { ChakraProvider, VStack, Box , Spacer} from '@chakra-ui/react';
+import { useAuth } from 'wasp/client/auth';
+import { ChakraProvider, VStack, Box, Spacer } from '@chakra-ui/react';
 import { theme } from './theme';
 import { ReactNode, useState, useEffect, createContext } from 'react';
 import NavBar from './components/NavBar';
@@ -7,7 +7,12 @@ import { Footer } from './components/CallToAction';
 import { EditPopover } from './components/Popover';
 import { useLocation } from 'react-router-dom';
 
-export const TextareaContext = createContext({ textareaState: '', setTextareaState: (value: string) => { }, isLnPayPending: false, setIsLnPayPending: (value: boolean) => { }});
+export const TextareaContext = createContext({
+  textareaState: '',
+  setTextareaState: (value: string) => {},
+  isLnPayPending: false,
+  setIsLnPayPending: (value: boolean) => {},
+});
 
 export default function App({ children }: { children: ReactNode }) {
   const [tooltip, setTooltip] = useState<{ x: string; y: string; text: string } | null>(null);

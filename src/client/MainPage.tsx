@@ -203,8 +203,8 @@ function MainPage() {
       } 
     } catch (error) {
       console.error('Error processing payment, please try again');
-      return null;
     }
+    return null;
   }
 
   function checkIfSubPastDueAndRedirect(user: Omit<User, 'password'>) {
