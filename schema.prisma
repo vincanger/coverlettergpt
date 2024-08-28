@@ -13,7 +13,7 @@ model User {
   email                String?
   hasPaid              Boolean       @default(false)
   isUsingLn            Boolean       @default(false)
-  gptModel             String        @default("gpt-3.5-turbo")
+  gptModel             String        @default("gpt-4o-mini")
   datePaid             DateTime?
   stripeId             String?
   checkoutSessionId    String?

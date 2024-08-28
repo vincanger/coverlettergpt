@@ -37,7 +37,7 @@ export default function ProfilePage({ user }: { user: User }) {
     ],
   });
 
-  async function handleGpt3Click() {
+  async function handleBuy4oMini() {
     setIsLoading(true);
     try {
       const response = await stripePayment();
@@ -49,7 +49,7 @@ export default function ProfilePage({ user }: { user: User }) {
     setIsLoading(false);
   }
 
-  async function handleGpt4Click() {
+  async function handleBuy4o() {
     setIsGpt4Loading(true);
     try {
       const response = await stripeGpt4Payment();
@@ -87,7 +87,7 @@ export default function ProfilePage({ user }: { user: User }) {
               <Text textAlign='initial'>Thanks so much for your support!</Text>
 
               <Text textAlign='initial'>
-                You have unlimited access to CoverLetterGPT using {user.gptModel === 'gpt-4' ? 'GPT-4' : 'GPT-3.5'}{' '}
+                You have unlimited access to CoverLetterGPT using {user.gptModel.includes('gpt-4') ? 'GPT-4o' : 'GPT-4o-mini'}{' '}
                 until:
               </Text>
 
@@ -160,9 +160,9 @@ export default function ProfilePage({ user }: { user: User }) {
                         <br />
                         monthly subscription
                       </Text>
-                      <Heading size='md'>Using GPT-3.5 🦾</Heading>
+                      <Heading size='md'>Using GPT-4o-mini 🚀</Heading>
                     </VStack>
-                    <Button mr={3} isLoading={isLoading} onClick={handleGpt3Click}>
+                    <Button mr={3} isLoading={isLoading} onClick={handleBuy4oMini}>
                       Buy Now!
                     </Button>
                   </VStack>
@@ -184,9 +184,9 @@ export default function ProfilePage({ user }: { user: User }) {
                       <Text textAlign='start' fontSize='md'>
                         Unlimited <br /> monthly subscription
                       </Text>
-                      <Heading size='md'>Using GPT-4 🤖</Heading>
+                      <Heading size='md'>Using GPT-4o 🤖</Heading>
                     </VStack>
-                    <Button colorScheme='purple' mr={3} isLoading={isGpt4loading} onClick={handleGpt4Click}>
+                    <Button colorScheme='purple' mr={3} isLoading={isGpt4loading} onClick={handleBuy4o}>
                       💰 Buy Now!
                     </Button>
                   </VStack>
@@ -211,7 +211,7 @@ export default function ProfilePage({ user }: { user: User }) {
                     <VStack gap={3} alignItems='center'>
                       <Heading size='xl'>⚡️</Heading>
                       <Text textAlign='start' fontSize='md'>
-                        You have affordable, pay-per-use access to CoverLetterGPT with GPT-4 via the Lightning Network
+                        You have affordable, pay-per-use access to CoverLetterGPT with GPT-4o via the Lightning Network
                       </Text>
                       <Text textAlign='start' fontSize='sm'>
                         Note: if you prefer a montly subscription, please logout and sign in with Google.

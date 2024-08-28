@@ -245,7 +245,7 @@ function MainPage() {
         isCompleteCoverLetter,
         includeWittyRemark: values.includeWittyRemark,
         temperature: creativityValue,
-        gptModel: values.gptModel || 'gpt-3.5',
+        gptModel: values.gptModel || 'gpt-4o-mini',
         lnPayment: lnPayment || undefined,
       };
 
@@ -290,7 +290,7 @@ function MainPage() {
         isCompleteCoverLetter,
         temperature: creativityValue,
         includeWittyRemark: values.includeWittyRemark,
-        gptModel: values.gptModel || 'gpt-3.5',
+        gptModel: values.gptModel || 'gpt-4o-mini',
         lnPayment: lnPayment || undefined,
       };
 
@@ -491,7 +491,7 @@ function MainPage() {
                   </FormHelperText>
                 </VStack>
               </FormControl>
-              {user?.gptModel === 'gpt-4' && (
+              {user?.gptModel.includes('gpt-4') && (
                 <FormControl>
                   <VStack
                     border={'sm'}
@@ -508,26 +508,20 @@ function MainPage() {
                   >
                     <RadioGroup
                       id='gptModel'
-                      defaultValue='gpt-4'
+                      defaultValue='gpt-4o'
                       color='text-contrast-lg'
                       fontWeight='semibold'
                       size='md'
                     >
                       <HStack spacing={5}>
-                        <Radio {...register('gptModel')} value='gpt-3.5'>
-                          GPT 3.5
+                        <Radio {...register('gptModel')} value='gpt-4o-mini'>
+                          GPT 4o mini
                         </Radio>
-                        <Radio {...register('gptModel')} value='gpt-4'>
-                          GPT 4
+                        <Radio {...register('gptModel')} value='gpt-4o'>
+                          GPT 4o
                         </Radio>
                       </HStack>
                     </RadioGroup>
-
-                    <FormHelperText>
-                      <Text fontSize='xs' color='text-contrast-md'>
-                        If you are getting a token limit error, try using GPT 3.5.
-                      </Text>
-                    </FormHelperText>
                   </VStack>
                 </FormControl>
               )}

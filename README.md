@@ -22,7 +22,7 @@ After cloning this repo, you can run it locally by following these steps:
 
 - 🐝 [Wasp](https://wasp-lang.dev) - allows you to build full-stack apps with 10x less boilerplate
 - 🎨 [Chakra-ui](https://chakra-ui.com/) - UI components for React that look good and are easy to work with
-- 🤖 [OpenAI](https://openai.com/) - GPT-3.5 turbo and GPT-4 API
+- 🤖 [OpenAI](https://openai.com/) - GPT-4o API
 - 💸 [Stripe](https://stripe.com/) - for payments
 - ⚡️ [Lightning / Bolt11](https://github.com/bitcoinjs/bolt11) - for Bitcoin Lightning payments
 
