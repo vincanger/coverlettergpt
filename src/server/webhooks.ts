@@ -29,19 +29,19 @@ export const stripeWebhook: StripeWebhook = async (request, response, context) =
       console.log('line_items: ', line_items);
 
       if (line_items?.data[0]?.price?.id === process.env.GPT4_PRICE_ID) {
-        console.log('GPT4 Subscription purchased');
+        console.log('GPT4o Subscription purchased');
         await context.entities.User.updateMany({
           where: {
             stripeId: userStripeId,
           },
           data: {
             hasPaid: true,
-            gptModel: 'gpt-4',
+            gptModel: 'gpt-4o',
             datePaid: new Date(),
           },
         });
       } else if (line_items?.data[0]?.price?.id === process.env.PRODUCT_PRICE_ID) {
-        console.log('GPT3.5-turbo Subscription purchased');
+        console.log('gpt-4o-mini Subscription purchased');
         await context.entities.User.updateMany({
           where: {
             stripeId: userStripeId,
@@ -49,7 +49,7 @@ export const stripeWebhook: StripeWebhook = async (request, response, context) =
           data: {
             hasPaid: true,
             datePaid: new Date(),
-            gptModel: 'gpt-3.5-turbo',
+            gptModel: 'gpt-4o-mini',
           },
         });
       } else if (line_items?.data[0]?.price?.id === process.env.PRODUCT_CREDITS_PRICE_ID) {
@@ -62,7 +62,7 @@ export const stripeWebhook: StripeWebhook = async (request, response, context) =
             credits: {
               increment: 10,
             },
-            gptModel: 'gpt-3.5-turbo',
+            gptModel: 'gpt-4o-mini',
           },
         });
       }

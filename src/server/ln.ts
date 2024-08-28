@@ -122,7 +122,7 @@ export const lnLogin: LnLogin = async (request, response, context) => {
       username: key,
       email: 'Bitcoin Lightning User',
       isUsingLn: true,
-      gptModel: 'gpt-4',
+      gptModel: 'gpt-4o',
       credits: 0,
       lnData: {
         connect: {

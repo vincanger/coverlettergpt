@@ -1,0 +1,87 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                   Int           @id @default(autoincrement())
+  username             String        @unique
+  email                String?
+  hasPaid              Boolean       @default(false)
+  isUsingLn            Boolean       @default(false)
+  gptModel             String        @default("gpt-4o-mini")
+  datePaid             DateTime?
+  stripeId             String?
+  checkoutSessionId    String?
+  subscriptionStatus   String?
+  notifyPaymentExpires Boolean       @default(false)
+  credits              Int           @default(3)
+  letters              CoverLetter[]
+  jobs                 Job[]
+  lnData               LnData?
+  lnPayments           LnPayment[]
+}
+
+model LnData {
+  id        String    @id @default(uuid())
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int?      @unique
+  loginUrl  String?   @unique
+  k1Hash    String    @unique
+  token     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+// type LightningInvoice = {
+//   status: string;
+//   successAction: {
+//     tag: string;
+//     message: string;
+//   };
+//   verify: string;
+//   routes: any[]; // You can replace this with a more specific type if needed
+//   pr: string;
+// };
+
+model LnPayment {
+  pr        String    @id @unique
+  status    String
+  settled   Boolean   @default(false)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  amount    Int?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+model CoverLetter {
+  id         String    @id @default(uuid())
+  title      String
+  content    String
+  tokenUsage Int
+  job        Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId      String
+  user       User?     @relation(fields: [userId], references: [id])
+  userId     Int?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime? @updatedAt
+}
+
+model Job {
+  id          String        @id @default(uuid())
+  title       String
+  company     String
+  location    String
+  description String
+  coverLetter CoverLetter[]
+  user        User?         @relation(fields: [userId], references: [id])
+  userId      Int?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  isCompleted Boolean       @default(false)
+}

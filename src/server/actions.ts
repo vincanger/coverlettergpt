@@ -115,7 +115,7 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
   console.log(' gpt model: ', gptModel);
 
   const payload = {
-    model: gptModel === 'gpt-4' ? 'gpt-4' : 'gpt-3.5-turbo-16k',
+    model: gptModel,
     messages: [
       {
         role: 'system',
@@ -197,7 +197,7 @@ export const generateEdit: GenerateEdit<
   command = `You are a cover letter editor. You will be given a piece of isolated text from within a cover letter and told how you can improve it. Only respond with the revision. Make sure the revision is in the same language as the given isolated text.`;
 
   const payload = {
-    model: context.user.gptModel === 'gpt-4' ? 'gpt-4' : 'gpt-3.5-turbo',
+    model: context.user.gptModel.includes('gpt-4') ? 'gpt-4o' : 'gpt-4o-mini',
     messages: [
       {
         role: 'system',
