@@ -3,7 +3,7 @@ import { useQuery, getUserInfo } from "wasp/client/operations";
 import BorderBox from './components/BorderBox';
 import { Heading, Text, Spinner } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 type UpdateUserResult = Pick<User, 'id' | 'email' | 'hasPaid'>;
 type PaymentStatus = 'paid' | 'canceled' | 'error' | 'loading';
@@ -27,16 +27,16 @@ export default function CheckoutPage({ user }: { user: User }) {
     id: user.id,
   });
 
-  const history = useHistory();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user?.hasPaid) {
-      history.push('/profile');
+      navigate('/profile');
       return;
     }
     function delayedRedirect() {
       return setTimeout(() => {
-        history.push('/profile');
+        navigate('/profile');
       }, 4000);
     }
 
@@ -45,7 +45,7 @@ export default function CheckoutPage({ user }: { user: User }) {
     if (cancel) {
       setHasPaid('canceled');
     } else {
-      history.push('/profile');
+      navigate('/profile');
     }
     delayedRedirect();
     return () => {

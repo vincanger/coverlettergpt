@@ -17,7 +17,7 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import { useRef } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { AiOutlineLogin } from 'react-icons/ai';
 import { BiTrash } from 'react-icons/bi';
@@ -37,9 +37,9 @@ export function LeaveATip({
   const [isLoading, setIsLoading] = useState(false);
   const tipRef = useRef(null);
 
-  const history = useHistory();
+  const navigate = useNavigate();
   const handleClick = async () => {
-    history.push('/profile');
+    navigate('/profile');
     onClose();
   };
 
@@ -92,11 +92,11 @@ export function LeaveATip({
 }
 
 export function LoginToBegin({ isOpen, onClose }: { isOpen: boolean; onOpen: () => void; onClose: () => void }) {
-  const history = useHistory();
+  const navigate = useNavigate();
   const loginRef = useRef(null);
 
   const handleClick = async () => {
-    history.push('/login');
+    navigate('/login');
     onClose();
   };
 

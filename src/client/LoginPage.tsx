@@ -5,7 +5,7 @@ import { BsCurrencyBitcoin } from 'react-icons/bs';
 import { VStack, Button, Spinner, Text, useDisclosure } from '@chakra-ui/react';
 import BorderBox from './components/BorderBox';
 import { useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import LnLoginModal from './components/LnLoginModal';
 
 export default function Login() {
@@ -14,14 +14,14 @@ export default function Login() {
   const [lnIsLoading, setLnIsLoading] = useState<boolean>(false);
   const [lnLoginStatus, setLnLoginStatus] = useState<string>('');
   const { data: lnUserInfo, refetch: fetchLnUser } = useQuery(getLnUserInfo, k1Hash, { enabled: !!k1Hash });
-  const { data: user, isLoading, error, refetch: fetchUser } = useAuth();
+  const { data: user, isLoading } = useAuth();
   const { onOpen, onClose, isOpen } = useDisclosure();
 
-  const history = useHistory();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
-      history.push('/');
+      navigate('/');
     }
   }, [user]);
 
@@ -72,7 +72,6 @@ export default function Login() {
   return (
     <>
       <BorderBox>
-        {error && <Text>Something went wrong :(</Text>}
         {isLoading || !encodedUrl ? (
           <Spinner />
         ) : (

@@ -1,9 +1,14 @@
 app CoverLetterGPT {
   wasp: {
-    version: "^0.14.0"
+    version: "^0.15.0"
   },
   title: "CoverLetterGPT",
   head: [
+        "<meta charset=\"UTF-8\" />",
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />",
+        "<meta name=\"description\" content=\"Create Unique Cover Letters Based on Your Skills using GPT. Supercharge Your Job Search with Cover Letter GPT.\" />",
+        "<meta name=\"keywords\" content=\"cover letter, gpt, ai, job search, resume\" />",
+        "<meta name=\"author\" content=\"CoverLetterGPT\" />",
         "<meta property=\"og:type\" content=\"website\" />",
         "<meta property=\"og:url\" content=\"https://CoverLetterGPT.xyz\" />",
         "<meta property=\"og:title\" content=\"CoverLetterGPT\" />",
@@ -13,7 +18,6 @@ app CoverLetterGPT {
         "<meta name=\"twitter:image:width\" content=\"800\" />",
         "<meta name=\"twitter:image:height\" content=\"400\" />",
         "<meta name=\"twitter:card\" content=\"summary_large_image\" />",
-        "<!-- Google tag (gtag.js) --><script async src=\"https://www.googletagmanager.com/gtag/js?id=G-SXYZR2FHVJ\"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-SXYZR2FHVJ');</script>"
   ],
   // 🔐 Auth out of the box! https://wasp-lang.dev/docs/language/features#authentication--authorization
   auth: {
@@ -79,8 +83,13 @@ page CheckoutPage {
 
 route TosRoute { path: "/tos", to: TosPage }
 page TosPage {
-  component: import Tos from "@src/client/TosPage"
+  component: import Tos from "@src/client/legal/TosPage"
 } 
+
+route PrivacyRoute { path: "/privacy", to: PrivacyPage }
+page PrivacyPage {
+  component: import Privacy from "@src/client/legal/PrivacyPolicyPage"
+}
 
 /* ⛑ These are the Wasp Operations, which allow the client and server to interact:
  * https://wasp-lang.dev/docs/language/features#queries-and-actions-aka-operations
@@ -225,17 +234,6 @@ job checkUserSubscription {
   },
   schedule: {
     cron: "0 23 * * *" 
-  },
-  entities: [User]
-}
-
-job checkExpirationDate {
-  executor: PgBoss,
-  perform: {
-    fn: import { sendExpirationNotice } from "@src/server/workers/sendExpirationNotice.js"
-  },
-  schedule: {
-    cron: "0 17 * * *" 
   },
   entities: [User]
 }

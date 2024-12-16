@@ -14,7 +14,7 @@ import {
   useClipboard,
 } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AiOutlineEdit } from 'react-icons/ai';
 
 type ModalProps = {
@@ -29,7 +29,7 @@ export default function ModalElement({ coverLetterData, isOpen, onOpen, onClose 
 
   const { hasCopied, onCopy } = useClipboard(selectedCoverLetter.content);
 
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const copyButtonRef = useRef(null);
@@ -98,7 +98,7 @@ export default function ModalElement({ coverLetterData, isOpen, onOpen, onClose 
             variant='outline'
             size='sm'
             mr={3}
-            onClick={() => history.push(`/cover-letter/${selectedCoverLetter.id}`)}
+            onClick={() => navigate(`/cover-letter/${selectedCoverLetter.id}`)}
           >
             Edit
           </Button>

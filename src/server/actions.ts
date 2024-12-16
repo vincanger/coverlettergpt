@@ -197,7 +197,7 @@ export const generateEdit: GenerateEdit<
   command = `You are a cover letter editor. You will be given a piece of isolated text from within a cover letter and told how you can improve it. Only respond with the revision. Make sure the revision is in the same language as the given isolated text.`;
 
   const payload = {
-    model: context.user.gptModel.includes('gpt-4') ? 'gpt-4o' : 'gpt-4o-mini',
+    model: context.user.gptModel === 'gpt-4' || context.user.gptModel === 'gpt-4o' ? 'gpt-4o' : 'gpt-4o-mini',
     messages: [
       {
         role: 'system',

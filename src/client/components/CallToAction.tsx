@@ -20,16 +20,16 @@ export function Footer() {
           <HStack justify='center'>
             <FaTwitter />
             <Text fontSize='sm' color='purple.300'>
-              Contact Us
+              Follow me on Txitter
             </Text>
           </HStack>
         </Link>
-        <WaspLink to='/tos' hash='terms'>
+        <WaspLink to='/tos'>
           <Text fontSize='sm' color='purple.300'>
             Terms of Service
           </Text>
         </WaspLink>
-        <WaspLink to='/tos' hash='pp'>
+        <WaspLink to='/privacy'>
           <Text fontSize='sm' color='purple.300'>
             Privacy Policy
           </Text>

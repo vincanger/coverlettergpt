@@ -1,24 +1,28 @@
 import { type CoverLetter } from "wasp/entities";
 import { editCoverLetter, useQuery, getCoverLetter } from "wasp/client/operations";
 import { Tooltip, Button, Textarea, useClipboard, Spinner, HStack } from '@chakra-ui/react';
-import { match } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import BorderBox from './components/BorderBox';
 import { useContext } from 'react';
 import { TextareaContext } from './App';
 import { EditAlert } from './components/AlertDialog';
 import { useEffect, useState } from 'react';
 
-export default function CoverLetterPage({ match }: { match: match<{ id: string }> }) {
+export default function CoverLetterPage() {
   const { textareaState, setTextareaState } = useContext(TextareaContext);
   const [editIsLoading, setEditIsLoading] = useState<boolean>(false);
   const [isEdited, setIsEdited] = useState<boolean>(false);
 
-  const id = match.params.id as string;
+  const { id } = useParams();
+  if (!id) {
+    return <BorderBox>Error: Cover letter ID is required</BorderBox>;
+  }
+
   const {
     data: coverLetter,
     isLoading,
     refetch,
-  } = useQuery<{ id: string }, CoverLetter>(getCoverLetter, { id: id }, { enabled: false });
+  } = useQuery<{ id: string }, CoverLetter>(getCoverLetter, { id }, { enabled: false });
 
   const { hasCopied, onCopy } = useClipboard(coverLetter?.content || '');
 
@@ -36,6 +40,9 @@ export default function CoverLetterPage({ match }: { match: match<{ id: string }
   const handleClick = async () => {
     try {
       setEditIsLoading(true);
+      if (!id) {
+        throw new Error('Cover letter ID is required');
+      }
 
       const editedCoverLetter = await editCoverLetter({ coverLetterId: id, content: textareaState });
 

@@ -43,7 +43,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { useState, useEffect, useRef } from 'react';
 import { ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import LnPaymentModal from './components/LnPaymentModal';
 import { fetchLightningInvoice } from './lightningUtils';
 import type { LightningInvoice } from './lightningUtils';
@@ -59,7 +59,7 @@ function MainPage() {
 
   const { data: user } = useAuth();
 
-  const history = useHistory();
+  const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
   const jobIdParam = urlParams.get('job');
 
@@ -209,7 +209,7 @@ function MainPage() {
 
   function checkIfSubPastDueAndRedirect(user: Omit<User, 'password'>) {
     if (user.subscriptionStatus === 'past_due') {
-      history.push('/profile')
+      navigate('/profile')
       return true;
     } else {
       return false;
@@ -219,11 +219,11 @@ function MainPage() {
   async function onSubmit(values: any): Promise<void> {
     let canUserContinue = hasUserPaidOrActiveTrial();
     if (!user) {
-      history.push('/login');
+      navigate('/login');
       return;
     }
     if (!canUserContinue) {
-      history.push('/profile');
+      navigate('/profile');
       return;
     }
 
@@ -253,7 +253,7 @@ function MainPage() {
 
       const coverLetter = await generateCoverLetter(payload);
 
-      history.push(`/cover-letter/${coverLetter.id}`);
+      navigate(`/cover-letter/${coverLetter.id}`);
     } catch (error: any) {
       cancelLoadingText();
       alert(`${error?.message ?? 'Something went wrong, please try again'}`);
@@ -264,11 +264,11 @@ function MainPage() {
   async function onUpdate(values: any): Promise<void> {
     const canUserContinue = hasUserPaidOrActiveTrial();
     if (!user) {
-      history.push('/login');
+      navigate('/login');
       return;
     }
     if (!canUserContinue) {
-      history.push('/profile');
+      navigate('/profile');
       return;
     }
 
@@ -298,7 +298,7 @@ function MainPage() {
 
       const coverLetterId = await updateCoverLetter(payload);
 
-      history.push(`/cover-letter/${coverLetterId}`);
+      navigate(`/cover-letter/${coverLetterId}`);
     } catch (error: any) {
       cancelLoadingText();
       alert(`${error?.message ?? 'Something went wrong, please try again'}`);
@@ -491,7 +491,7 @@ function MainPage() {
                   </FormHelperText>
                 </VStack>
               </FormControl>
-              {user?.gptModel.includes('gpt-4') && (
+              {(user?.gptModel === 'gpt-4' || user?.gptModel === 'gpt-4o') && (
                 <FormControl>
                   <VStack
                     border={'sm'}

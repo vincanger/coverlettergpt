@@ -30,7 +30,7 @@ import {
 import ModalElement from './components/Modal';
 import DescriptionModal from './components/DescriptionModal';
 import BorderBox from './components/BorderBox';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { DeleteJob } from './components/AlertDialog';
 import { FiDelete } from 'react-icons/fi';
 
@@ -38,11 +38,11 @@ function JobsPage({ user }: { user: User }) {
   const [jobId, setJobId] = useState<string>('');
   const [descriptionText, setDescriptionText] = useState<string | null>(null);
 
-  const history = useHistory();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user.subscriptionStatus === 'past_due') {
-      history.push('/profile');
+      navigate('/profile');
     }
   }, [user.subscriptionStatus]);
 
@@ -88,7 +88,7 @@ function JobsPage({ user }: { user: User }) {
   };
 
   const updateCoverLetterHandler = async (jobId: string) => {
-    history.push(`/?job=${jobId}`);
+    navigate(`/?job=${jobId}`);
   };
 
   return (
@@ -169,7 +169,7 @@ function JobsPage({ user }: { user: User }) {
           </Accordion>
         )}
       </BorderBox>
-      <Button size='sm' mt={3} colorScheme='purple' alignSelf='flex-end' onClick={() => history.push('/')}>
+      <Button size='sm' mt={3} colorScheme='purple' alignSelf='flex-end' onClick={() => navigate('/')}>
         Create New Job
       </Button>
       {coverLetter && coverLetter.length > 0 && (
