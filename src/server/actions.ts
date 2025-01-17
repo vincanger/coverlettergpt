@@ -146,16 +146,30 @@ export const generateCoverLetter: GenerateCoverLetter<CoverLetterPayload, CoverL
       });
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY!}`,
-      },
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    if (context.user.localModel) {
+      // Use local model
+      const response = await fetch(context.user.localModel, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
 
-    json = (await response.json()) as OpenAIResponse;
+      json = (await response.json()) as OpenAIResponse;
+    } else {
+      // Use OpenAI model
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY!}`,
+        },
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      json = (await response.json()) as OpenAIResponse;
+    }
 
     if (json?.error) throw new HttpError(500, json?.error?.message || 'Something went wrong');
 

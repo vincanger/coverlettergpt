@@ -14,6 +14,7 @@ model User {
   hasPaid              Boolean       @default(false)
   isUsingLn            Boolean       @default(false)
   gptModel             String        @default("gpt-4o-mini")
+  localModel           String?       // New field to store the local model path
   datePaid             DateTime?
   stripeId             String?
   checkoutSessionId    String?
