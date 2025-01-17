@@ -4,13 +4,14 @@ import { logout } from 'wasp/client/auth';
 import { stripePayment, stripeGpt4Payment, useQuery, getUserInfo } from 'wasp/client/operations';
 
 import BorderBox from './components/BorderBox';
-import { Box, Heading, Text, Button, Code, Spinner, VStack, HStack, Link } from '@chakra-ui/react';
+import { Box, Heading, Text, Button, Code, Spinner, VStack, HStack, Link, FormControl, FormLabel, Input } from '@chakra-ui/react';
 import { useState } from 'react';
 import { IoWarningOutline } from 'react-icons/io5';
 
 export default function ProfilePage({ user }: { user: User }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isGpt4loading, setIsGpt4Loading] = useState(false);
+  const [localModel, setLocalModel] = useState(user.localModel || '');
 
   const { data: userInfo } = useQuery(getUserInfo, { id: user.id });
 
@@ -39,6 +40,11 @@ export default function ProfilePage({ user }: { user: User }) {
       alert('Something went wrong. Please try again');
     }
     setIsGpt4Loading(false);
+  }
+
+  async function handleLocalModelChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setLocalModel(event.target.value);
+    // Add logic to update the localModel field in the backend
   }
 
   return (
@@ -160,6 +166,16 @@ export default function ProfilePage({ user }: { user: User }) {
               </VStack>
             </VStack>
           )}
+          <FormControl>
+            <FormLabel htmlFor='localModel'>Local Model Path</FormLabel>
+            <Input
+              id='localModel'
+              type='text'
+              value={localModel}
+              onChange={handleLocalModelChange}
+              placeholder='Enter local model path'
+            />
+          </FormControl>
           <Button alignSelf='flex-end' size='sm' onClick={() => logout()}>
             Logout
           </Button>
