@@ -1,0 +1,3 @@
+[build]
+  command = "curl -sSL https://get.wasp.sh/installer.sh | sh -s -- -v 0.15.0 && wasp build && cd .wasp/build/web-app && npm install && npm run build"
+  publish = ".wasp/build/web-app/build"

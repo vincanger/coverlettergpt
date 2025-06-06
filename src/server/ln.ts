@@ -20,7 +20,10 @@ import lnurl from 'lnurl';
 import bolt11 from 'bolt11';
 import axios from 'axios';
 
-const DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+const DOMAIN =
+  process.env.REACT_APP_API_URL ??
+  'https://coverlettergpt-production-6766.up.railway.app';
+
 
 // the lucia auth stuff is a dumb workaround until we integrate Bitcoin Lightning in Wasp Auth
 const prismaAdapter = new PrismaAdapter(prisma.session as any, prisma.auth as any);
