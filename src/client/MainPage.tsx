@@ -35,6 +35,7 @@ import {
   Radio,
   Tooltip,
   useDisclosure,
+  Select,
 } from '@chakra-ui/react';
 import BorderBox from './components/BorderBox';
 import { LeaveATip, LoginToBegin } from './components/AlertDialog';
@@ -525,6 +526,13 @@ function MainPage() {
                   </VStack>
                 </FormControl>
               )}
+              <FormControl>
+                <FormLabel htmlFor='modelType'>Select Model Type</FormLabel>
+                <Select id='modelType' {...register('modelType')}>
+                  <option value='openai'>OpenAI</option>
+                  <option value='local'>Local</option>
+                </Select>
+              </FormControl>
               <VStack
                 border={'sm'}
                 bg='bg-contrast-xs'
